@@ -1,7 +1,9 @@
 /* eslint-disable no-unused-vars */
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
 import { useState } from "react";
+import { logout } from "../services/auth"; 
+import toast from "react-hot-toast";
 
 export default function Navbar({ user, categories, onSearch, onFilter }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,8 +19,22 @@ export default function Navbar({ user, categories, onSearch, onFilter }) {
     onFilter(e.target.value); // call parent handler
   };
 
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Logged out successfully");
+      navigate("/login");
+    } catch (error) {
+      toast.error("Logout failed: " + error.message);
+    }
+  };
+
   return (
     <div className="navbar bg-white shadow-md text-gray-600 justify-between">
+      
+      {/* admin side */}
       {user && (
         <>
           <div>
@@ -73,11 +89,12 @@ export default function Navbar({ user, categories, onSearch, onFilter }) {
           </div>
           <div className=" text-lg font-bold">Admin Panel</div>
           <div className="px-2 md:px-7">
-            <button className="btn btn-outline btn-error ">Logout</button>
+            <button className="btn btn-outline btn-error " onClick={handleLogout}>Logout</button>
           </div>
         </>
       )}
 
+      {/* client side */}
       {!user && (
         <>
           <div className="flex-1">

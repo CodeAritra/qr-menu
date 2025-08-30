@@ -11,9 +11,12 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const navigate = useNavigate()
 
   return (
     <div className="font-sans bg-white text-gray-900">
@@ -39,8 +42,8 @@ export default function HomePage() {
           </ul>
         </div>
         <div className="navbar-end hidden md:flex space-x-2">
-          <button className="btn btn-ghost btn-sm">Login</button>
-          <button className="btn btn-primary btn-sm">Sign Up</button>
+          <button className="btn btn-ghost btn-sm" onClick={()=>navigate("/login")}>Login</button>
+          <button className="btn btn-primary btn-sm" onClick={()=>navigate("/signup")}>Sign Up</button>
         </div>
         <div className="md:hidden">
           <button
@@ -72,10 +75,10 @@ export default function HomePage() {
               <a href="#contact">Contact</a>
             </li>
             <li>
-              <button className="btn btn-ghost w-full">Login</button>
+              <button className="btn btn-ghost w-full" onClick={()=>navigate("/login")}>Login</button>
             </li>
             <li>
-              <button className="btn btn-primary w-full">Sign Up</button>
+              <button className="btn btn-primary w-full" onClick={()=>navigate("/signup")}>Sign Up</button>
             </li>
           </ul>
         </div>

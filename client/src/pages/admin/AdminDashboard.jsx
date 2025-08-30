@@ -48,7 +48,6 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <Router>
         {/* Main Section */}
         <div className="flex-1 flex flex-col overflow-y-auto">
           <Navbar user={true}/>
@@ -73,7 +72,6 @@ export default function AdminDashboard() {
             </Routes>
           </main>
         </div>
-      </Router>
     </>
   );
 }
