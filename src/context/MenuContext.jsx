@@ -1,18 +1,7 @@
 import { createContext, useCallback, useEffect, useState } from "react";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import {
-  doc,
-  getDoc,
-  onSnapshot,
-  updateDoc,
-  setDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  addDoc,
-} from "firebase/firestore";
+import { doc, getDoc, onSnapshot, updateDoc, setDoc } from "firebase/firestore";
 import { toast } from "react-hot-toast";
 
 const MenuContext = createContext();
@@ -213,93 +202,155 @@ export const MenuProvider = ({ children }) => {
   };
 
   //order
-const placeOrder = async (
-  cafeId,
-  item,
-  fromCart = false,
-  customerName = "",
-  tableNo = ""
-) => {
-  const sessionId = getSessionId();
+  const placeOrder = async (
+    cafeId,
+    items,
+    fromCart = false,
+    customerName,
+    tableNo
+  ) => {
+    const sessionId = localStorage.getItem("sessionId") || getSessionId();
+    localStorage.setItem("sessionId", sessionId);
 
-  // fallback name if none given
-  const finalName =
-    customerName && customerName.trim() !== ""
-      ? customerName
-      : `Guest-${sessionId.slice(-5)}`;
+    const cafeRef = doc(db, "cafes", cafeId);
+    const cafeSnap = await getDoc(cafeRef);
 
-  // fallback table number if not given
-  const finalTable = tableNo && tableNo.trim() !== "" ? tableNo : "N/A";
+    if (!cafeSnap.exists()) throw new Error("Cafe not found!");
+    const cafeData = cafeSnap.data();
 
-  // 1️⃣ Check if there’s a pending order for this session
-  const q = query(
-    collection(db, "orders"),
-    where("cafeId", "==", cafeId),
-    where("sessionId", "==", sessionId),
-    where("status", "==", "pending")
-  );
-  const snap = await getDocs(q);
+    let orders = cafeData.orders || [];
 
-  if (!snap.empty) {
-    // Update existing pending order
-    const orderDoc = snap.docs[0];
-    const existing = orderDoc.data();
+    // check if session already has a pending order
+    let existingIndex = orders.findIndex(
+      (o) => o.sessionId === sessionId && o.status === "pending"
+    );
 
-    let updatedItems = [...existing.items];
-    if (fromCart) {
-      updatedItems.push(...item);
+    if (existingIndex > -1) {
+      // update existing
+      let existingOrder = orders[existingIndex];
+      let updatedItems = fromCart
+        ? [...existingOrder.items, ...items]
+        : [...existingOrder.items, items];
+
+      orders[existingIndex] = {
+        ...existingOrder,
+        items: updatedItems,
+        totalAmount: updatedItems.reduce(
+          (sum, i) => sum + i.price * (i.qty || 1),
+          0
+        ),
+        updatedAt: new Date().toISOString(),
+      };
     } else {
-      updatedItems.push(item);
+      // new order
+      const now = new Date();
+      const createdAt = now.toISOString(); // "2025-08-31T05:01:20.836Z"
+      const readableDate = now.toLocaleDateString(); // "31/08/2025"
+      const readableTime = now.toLocaleTimeString(); // "10:31 AM"
+
+      const newOrder = {
+        orderId: crypto.randomUUID(),
+        sessionId,
+        customerName,
+        tableNo,
+        status: "pending",
+        items: fromCart ? items : [items],
+        totalAmount: (fromCart ? items : [items]).reduce(
+          (sum, i) => sum + i.price * (i.qty || 1),
+          0
+        ),
+        createdAt: createdAt,
+        date: readableDate,
+        time: readableTime,
+      };
+      orders.push(newOrder);
     }
 
-    await updateDoc(doc(db, "orders", orderDoc.id), {
-      items: updatedItems,
-      totalAmount: updatedItems.reduce(
-        (sum, i) => sum + i.price * (i.qty || 1),
-        0
-      ),
-      customerName: finalName,
-      tableNo: finalTable,
-      updatedAt: new Date().toISOString(),
-    });
-  } else {
-    // Create a new order
-    await addDoc(collection(db, "orders"), {
-      cafeId,
-      sessionId,
-      customerName: finalName,
-      tableNo: finalTable,
-      status: "pending",
-      items: fromCart ? item : [item],
-      totalAmount: (fromCart ? item : [item]).reduce(
-        (sum, i) => sum + i.price * (i.qty || 1),
-        0
-      ),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-  }
-};
-
+    await updateDoc(cafeRef, { orders });
+  };
 
   const listenOrders = (cafeId, setOrders) => {
-    const q = query(collection(db, "orders"), where("cafeId", "==", cafeId));
-    return onSnapshot(q, (snap) => {
-      let results = [];
-      snap.forEach((d) => results.push({ id: d.id, ...d.data() }));
-      setOrders(results);
+    const cafeRef = doc(db, "cafes", cafeId);
+    return onSnapshot(cafeRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        setOrders(data.orders || []); // active/pending orders
+        // completed/archived orders
+      } else {
+        setOrders([]);
+      }
     });
   };
 
-  const updateOrderStatus = async (orderId, status) => {
-    await updateDoc(doc(db, "orders", orderId), {
+  const updateOrderStatus = async (cafeId, orderId, status) => {
+    const cafeRef = doc(db, "cafes", cafeId);
+    const snap = await getDoc(cafeRef);
+
+    if (!snap.exists()) throw new Error("Cafe not found!");
+    const data = snap.data();
+
+    let orders = data.orders || [];
+    let orderHistory = data.orderHistory || [];
+
+    // Debug log all orderIds
+    console.log(
+      "Existing Orders:",
+      orders.map((o) => o.orderId)
+    );
+    console.log("Looking for:", orderId);
+
+    // Find the order
+    const orderIndex = orders.findIndex((o) => o.orderId === orderId);
+    if (orderIndex === -1) throw new Error("Order not found!");
+
+    let updatedOrder = {
+      ...orders[orderIndex],
       status,
       updatedAt: new Date().toISOString(),
-    });
+    };
+
+    if (status === "completed") {
+      // Move to history
+      orders.splice(orderIndex, 1);
+      orderHistory.push(updatedOrder);
+    } else {
+      // Just update inside orders[]
+      orders[orderIndex] = updatedOrder;
+    }
+
+    await updateDoc(cafeRef, { orders, orderHistory });
+  };
+
+  const completeOrder = async (cafeId, orderId) => {
+    const cafeRef = doc(db, "cafes", cafeId);
+    const cafeSnap = await getDoc(cafeRef);
+    if (!cafeSnap.exists()) throw new Error("Cafe not found!");
+
+    let { orders = [], orderHistory = [] } = cafeSnap.data();
+
+    const orderIndex = orders.findIndex((o) => o.orderId === orderId);
+    if (orderIndex === -1) throw new Error("Order not found!");
+
+    const completedOrder = {
+      ...orders[orderIndex],
+      status: "completed",
+      updatedAt: new Date().toISOString(),
+    };
+
+    // remove from active orders
+    orders.splice(orderIndex, 1);
+
+    // add to history
+    orderHistory.push(completedOrder);
+
+    await updateDoc(cafeRef, { orders, orderHistory });
   };
 
   //cart
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    const saved = localStorage.getItem("cart");
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // Load cart from localStorage so it persists
   useEffect(() => {
@@ -323,29 +374,49 @@ const placeOrder = async (
       }
       return [...prev, { ...item, qty: 1 }];
     });
+    toast.success("Added to cart");
   };
 
   // Remove from cart
   const removeFromCart = (id) => {
     setCart((prev) => prev.filter((i) => i.id !== id));
+    toast.success("Removed from cart");
   };
 
   // Update qty
-  const updateQty = (id, qty) => {
-    setCart((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, qty } : i))
-    );
-  };
+   const increaseQty = (id) => {
+     setCart((prev) =>
+       prev.map((item) =>
+         item.id === id ? { ...item, qty: item.qty + 1 } : item
+       )
+     );
+   };
+
+   const decreaseQty = (id) => {
+     setCart((prev) =>
+       prev
+         .map((item) =>
+           item.id === id ? { ...item, qty: Math.max(1, item.qty - 1) } : item
+         )
+         .filter((item) => item.qty > 0)
+     );
+   };
 
   // Clear cart
   const clearCart = () => setCart([]);
+
+  //total
+  const totalAmount = cart.reduce(
+    (sum, item) => sum + item.price * item.qty,
+    0
+  );
 
   return (
     <MenuContext.Provider
       value={{
         menu,
         cafe,
-        loading,
+        loading,setLoading,
         addItem,
         updateItem,
         deleteItem,
@@ -353,7 +424,12 @@ const placeOrder = async (
         fetchCafe,
         listenOrders,
         updateOrderStatus,
-        placeOrder,addToCart,removeFromCart,updateQty,clearCart
+        placeOrder,cart,
+        addToCart,
+        removeFromCart,
+        increaseQty,decreaseQty,
+        clearCart,
+        completeOrder,totalAmount
       }}
     >
       {children}

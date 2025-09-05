@@ -62,6 +62,11 @@ export default function Navbar({ categories, onSearch, onFilter }) {
                     Orders
                   </Link>
                 </li>
+                <li>
+                  <Link to="order-history" className="btn btn-ghost btn-primary">
+                    History
+                  </Link>
+                </li>
               </ul>
             </div>
 
@@ -91,13 +96,16 @@ export default function Navbar({ categories, onSearch, onFilter }) {
                 className="menu menu-lg dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow "
               >
                 <li>
-                  <Link to="/">Dashboard</Link>
+                  <Link to="">Dashboard</Link>
                 </li>
                 <li>
-                  <Link to="/create">Create Menu</Link>
+                  <Link to="create">Create Menu</Link>
                 </li>
                 <li>
-                  <Link to="/order">Orders</Link>
+                  <Link to="order">Orders</Link>
+                </li>
+                <li>
+                  <Link to="order-history">History</Link>
                 </li>
               </ul>
             </div>

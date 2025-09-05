@@ -1,64 +1,40 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMenu } from "../../context/useMenu"; // to get cafe info
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function Cart() {
   const [customerName, setCustomerName] = useState("");
   const [tableNo, setTableNo] = useState("");
-  const { cafeId } = useParams();
-  const { placeOrder } = useMenu(); // ✅ so we know cafeId & name
-  const [cart, setCart] = useState(() => {
-    const saved = localStorage.getItem("cart");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { cafeId, cafeName } = useParams();
+  const {
+    placeOrder,
+    clearCart,
+    cart,
+    increaseQty,
+    decreaseQty,
+    removeFromCart,
+    totalAmount,
+    loading,
+    setLoading,
+  } = useMenu();
 
-  const [loading, setLoading] = useState(false);
-
-  // --- Sync with localStorage ---
-  useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
-
-  const increaseQty = (id) => {
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, qty: item.qty + 1 } : item
-      )
-    );
-  };
-
-  const decreaseQty = (id) => {
-    setCart((prev) =>
-      prev
-        .map((item) =>
-          item.id === id ? { ...item, qty: Math.max(1, item.qty - 1) } : item
-        )
-        .filter((item) => item.qty > 0)
-    );
-  };
-
-  const removeItem = (id) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const totalAmount = cart.reduce(
-    (sum, item) => sum + item.price * item.qty,
-    0
-  );
+  const navigate = useNavigate();
 
   const handleCheckout = async () => {
     if (cart.length === 0) return alert("Cart is empty!");
     setLoading(true);
 
     try {
-      await placeOrder(cafeId, cart, true);
+      await placeOrder(cafeId, cart, true, customerName, tableNo);
 
-      alert("✅ Order placed!");
-      setCart([]);
+      toast.success("Order placed!");
+      clearCart();
       localStorage.removeItem("cart");
+      navigate(`/${cafeName}/${cafeId}`);
     } catch (err) {
       console.error("🔥 Checkout error:", err);
-      alert("Failed to place order!");
+      toast.error("Failed to place order!");
     } finally {
       setLoading(false);
     }
@@ -74,6 +50,28 @@ export default function Cart() {
         </div>
       ) : (
         <div className="space-y-4">
+          <div className="form-control mb-3">
+            <label className="label">Customer Name</label>
+            <input
+              type="text"
+              placeholder="Enter your name"
+              className="input input-bordered"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+            />
+          </div>
+
+          <div className="form-control mb-3">
+            <label className="label">Table No.</label>
+            <input
+              type="text"
+              placeholder="Enter table number"
+              className="input input-bordered"
+              value={tableNo}
+              onChange={(e) => setTableNo(e.target.value)}
+            />
+          </div>
+
           {cart.map((item) => (
             <div
               key={item.id}
@@ -106,7 +104,7 @@ export default function Cart() {
 
                 <button
                   className="btn btn-sm btn-error"
-                  onClick={() => removeItem(item.id)}
+                  onClick={() => removeFromCart(item.id)}
                 >
                   Remove
                 </button>

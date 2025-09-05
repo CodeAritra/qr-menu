@@ -9,6 +9,7 @@ import CreateMenu from "./pages/admin/CreateMenu";
 import ViewMenu from "./pages/ViewMenu";
 import Order from "./pages/admin/Order";
 import Cart from "./pages/client/Cart";
+import OrderHistory from "./pages/admin/OrderHistory";
 // import { seedMenu } from "./services/seedMenu";
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="" element={<ViewMenu />} />
             <Route path="create" element={<CreateMenu />} />
             <Route path="order" element={<Order />} />
+            <Route path="order-history" element={<OrderHistory />} />
           </Route>
           <Route path="/:cafeName/:cafeId" element={<ClientDashboard />}>
             <Route path="" element={<ViewMenu />} />

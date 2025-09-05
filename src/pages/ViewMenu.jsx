@@ -16,11 +16,11 @@ export default function ViewMenu() {
     fetchCafe(cafeId, cafeName);
   }, [fetchCafe, cafeId, cafeName]);
 
-  useEffect(() => {
-    console.log("user == ", user);
-    console.log("menu == ", menu);
-    console.log("cafe == ", cafe);
-  }, [user, menu, cafe]);
+  // useEffect(() => {
+  //   console.log("user == ", user);
+  //   console.log("menu == ", menu);
+  //   console.log("cafe == ", cafe);
+  // }, [user, menu, cafe]);
 
   if (loading) return <div className="p-4 text-center">Loading menu...</div>;
 
@@ -148,7 +148,7 @@ export default function ViewMenu() {
                     setEditItem(null);
                   }}
                 >
-                  Order
+                  Add to cart
                 </button>
                 <button className="btn" onClick={() => setEditItem(null)}>
                   Close

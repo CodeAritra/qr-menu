@@ -3,14 +3,18 @@ import { useMenu } from "../../context/useMenu";
 import { useParams } from "react-router-dom";
 
 export default function Order() {
-  const {cafeId} = useParams()
+  const { cafeId } = useParams();
   const [orders, setOrders] = useState([]);
   const { listenOrders, updateOrderStatus } = useMenu();
 
-  useEffect(() => {    
+  useEffect(() => {
     const unsub = listenOrders(cafeId, setOrders);
     return () => unsub();
-  }, [cafeId,listenOrders]);
+  }, [cafeId, listenOrders]);
+
+  // useEffect(() => {
+  //   console.log("orders = ", orders);
+  // }, [orders]);
 
   return (
     <div className="p-6">
@@ -24,18 +28,26 @@ export default function Order() {
         <div className="grid gap-6">
           {orders.map((order) => (
             <div
-              key={order.id}
+              key={order.orderId}
               className="card bg-base-100 shadow-xl border border-base-300"
             >
               <div className="card-body">
                 <div className="flex justify-between items-center">
-                  <h2 className="card-title">🧾 Order #{order.id}</h2>
+                  <div>
+                    <h2 className="card-title">
+                      🧾 Name - {order.customerName}
+                    </h2>
+                    <h2 className="card-title">
+                      🧾 Table no - {order.tableNo}
+                    </h2>
+                    <h2 className="card-title">🧾 Order date - {order.date}</h2>
+                    <h2 className="card-title">🧾 Order time - {order.time}</h2>
+                  </div>
+
                   <span
                     className={`badge ${
                       order.status === "pending"
                         ? "badge-warning"
-                        : order.status === "preparing"
-                        ? "badge-info"
                         : "badge-success"
                     }`}
                   >
@@ -67,16 +79,8 @@ export default function Order() {
                   <div className="join">
                     {order.status === "pending" && (
                       <button
-                        className="btn btn-sm btn-warning join-item"
-                        onClick={() => updateOrderStatus(order.id, "preparing")}
-                      >
-                        Start Preparing
-                      </button>
-                    )}
-                    {order.status === "preparing" && (
-                      <button
                         className="btn btn-sm btn-info join-item"
-                        onClick={() => updateOrderStatus(order.id, "completed")}
+                        onClick={() => updateOrderStatus(cafeId,order.orderId, "completed")}
                       >
                         Mark Completed
                       </button>
