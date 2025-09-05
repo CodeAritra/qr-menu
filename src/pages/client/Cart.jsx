@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
-import { createOrder } from "../services/orderService"; // 🔹 your Firebase order logic
-import { useMenu } from "../context/useMenu"; // to get cafe info
+import { useMenu } from "../../context/useMenu"; // to get cafe info
+import { useParams } from "react-router-dom";
 
 export default function Cart() {
-  const { cafe } = useMenu(); // ✅ so we know cafeId & name
+  const [customerName, setCustomerName] = useState("");
+  const [tableNo, setTableNo] = useState("");
+  const { cafeId } = useParams();
+  const { placeOrder } = useMenu(); // ✅ so we know cafeId & name
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem("cart");
     return saved ? JSON.parse(saved) : [];
@@ -48,10 +51,7 @@ export default function Cart() {
     setLoading(true);
 
     try {
-      await createOrder(cafe?.id, {
-        items: cart,
-        totalAmount,
-      });
+      await placeOrder(cafeId, cart, true);
 
       alert("✅ Order placed!");
       setCart([]);

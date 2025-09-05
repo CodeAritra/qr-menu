@@ -213,72 +213,132 @@ export const MenuProvider = ({ children }) => {
   };
 
   //order
-  async function placeOrder(cafeId, item, fromCart = false) {
-    const sessionId = getSessionId();
+const placeOrder = async (
+  cafeId,
+  item,
+  fromCart = false,
+  customerName = "",
+  tableNo = ""
+) => {
+  const sessionId = getSessionId();
 
-    // 1️⃣ Check if there’s a pending order for this session
-    const q = query(
-      collection(db, "orders"),
-      where("cafeId", "==", cafeId),
-      where("sessionId", "==", sessionId),
-      where("status", "==", "pending")
-    );
-    const snap = await getDocs(q);
+  // fallback name if none given
+  const finalName =
+    customerName && customerName.trim() !== ""
+      ? customerName
+      : `Guest-${sessionId.slice(-5)}`;
 
-    if (!snap.empty) {
-      // Update existing pending order
-      const orderDoc = snap.docs[0];
-      const existing = orderDoc.data();
+  // fallback table number if not given
+  const finalTable = tableNo && tableNo.trim() !== "" ? tableNo : "N/A";
 
-      let updatedItems = [...existing.items];
-      if (fromCart) {
-        // cart checkout: append all items
-        updatedItems.push(...item);
-      } else {
-        // one-click: append single item
-        updatedItems.push(item);
-      }
+  // 1️⃣ Check if there’s a pending order for this session
+  const q = query(
+    collection(db, "orders"),
+    where("cafeId", "==", cafeId),
+    where("sessionId", "==", sessionId),
+    where("status", "==", "pending")
+  );
+  const snap = await getDocs(q);
 
-      await updateDoc(doc(db, "orders", orderDoc.id), {
-        items: updatedItems,
-        totalAmount: updatedItems.reduce(
-          (sum, i) => sum + i.price * (i.qty || 1),
-          0
-        ),
-        updatedAt: new Date().toISOString(),
-      });
+  if (!snap.empty) {
+    // Update existing pending order
+    const orderDoc = snap.docs[0];
+    const existing = orderDoc.data();
+
+    let updatedItems = [...existing.items];
+    if (fromCart) {
+      updatedItems.push(...item);
     } else {
-      // Create a new order
-      await addDoc(collection(db, "orders"), {
-        cafeId,
-        sessionId,
-        status: "pending",
-        items: fromCart ? item : [item],
-        totalAmount: (fromCart ? item : [item]).reduce(
-          (sum, i) => sum + i.price * (i.qty || 1),
-          0
-        ),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
+      updatedItems.push(item);
     }
-  }
 
-  function listenOrders(cafeId, setOrders) {
+    await updateDoc(doc(db, "orders", orderDoc.id), {
+      items: updatedItems,
+      totalAmount: updatedItems.reduce(
+        (sum, i) => sum + i.price * (i.qty || 1),
+        0
+      ),
+      customerName: finalName,
+      tableNo: finalTable,
+      updatedAt: new Date().toISOString(),
+    });
+  } else {
+    // Create a new order
+    await addDoc(collection(db, "orders"), {
+      cafeId,
+      sessionId,
+      customerName: finalName,
+      tableNo: finalTable,
+      status: "pending",
+      items: fromCart ? item : [item],
+      totalAmount: (fromCart ? item : [item]).reduce(
+        (sum, i) => sum + i.price * (i.qty || 1),
+        0
+      ),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  }
+};
+
+
+  const listenOrders = (cafeId, setOrders) => {
     const q = query(collection(db, "orders"), where("cafeId", "==", cafeId));
     return onSnapshot(q, (snap) => {
       let results = [];
       snap.forEach((d) => results.push({ id: d.id, ...d.data() }));
       setOrders(results);
     });
-  }
+  };
 
-  async function updateOrderStatus(orderId, status) {
+  const updateOrderStatus = async (orderId, status) => {
     await updateDoc(doc(db, "orders", orderId), {
       status,
       updatedAt: new Date().toISOString(),
     });
-  }
+  };
+
+  //cart
+  const [cart, setCart] = useState([]);
+
+  // Load cart from localStorage so it persists
+  useEffect(() => {
+    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+    setCart(storedCart);
+  }, []);
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
+
+  // Add to cart
+  const addToCart = (item) => {
+    setCart((prev) => {
+      const existing = prev.find((i) => i.id === item.id);
+      if (existing) {
+        return prev.map((i) =>
+          i.id === item.id ? { ...i, qty: i.qty + 1 } : i
+        );
+      }
+      return [...prev, { ...item, qty: 1 }];
+    });
+  };
+
+  // Remove from cart
+  const removeFromCart = (id) => {
+    setCart((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  // Update qty
+  const updateQty = (id, qty) => {
+    setCart((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, qty } : i))
+    );
+  };
+
+  // Clear cart
+  const clearCart = () => setCart([]);
 
   return (
     <MenuContext.Provider
@@ -293,7 +353,7 @@ export const MenuProvider = ({ children }) => {
         fetchCafe,
         listenOrders,
         updateOrderStatus,
-        placeOrder,
+        placeOrder,addToCart,removeFromCart,updateQty,clearCart
       }}
     >
       {children}

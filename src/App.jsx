@@ -28,6 +28,7 @@ export default function App() {
             <Route path="order" element={<Order />} />
           </Route>
           <Route path="/:cafeName/:cafeId" element={<ClientDashboard />}>
+            <Route path="" element={<ViewMenu />} />
             <Route path="cart" element={<Cart />} />
           </Route>
           <Route path="/login" element={<Login />} />

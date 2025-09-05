@@ -118,7 +118,7 @@ export default function Navbar({ categories, onSearch, onFilter }) {
       {!user && (
         <>
           <div className="flex-1">
-            <a className="text-2xl font-bold text-primary">QRMenu</a>
+            <a className="text-2xl font-bold text-primary" onClick={()=>navigate("")}>QRMenu</a>
           </div>
 
           <div className="flex items-center">
