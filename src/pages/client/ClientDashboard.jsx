@@ -2,9 +2,27 @@ import { Outlet } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import ViewMenu from "../ViewMenu";
 import { useMenu } from "../../context/useMenu";
+import { useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 export default function ClientDashboard() {
   const { trial, cafe } = useMenu();
+  const [tableNo, setTableNo] = useState();
+
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const tableParam = searchParams.get("table");
+    if (tableParam) {
+      setTableNo(tableParam);
+      localStorage.setItem("tableNo", tableParam); // optional, persist if needed
+    }
+  }, [searchParams]);
+
+  useEffect(()=>{
+    console.log("table no = ",tableNo);
+    
+  },[tableNo])
 
   if (trial?.expired) {
     return (

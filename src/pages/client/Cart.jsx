@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMenu } from "../../context/useMenu"; // to get cafe info
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 
 export default function Cart() {
   const [customerName, setCustomerName] = useState("");
-  const [tableNo, setTableNo] = useState("");
+  const [tableNo, setTableNo] = useState(localStorage.getItem("tableNo") || "");
   const { cafeId, cafeName } = useParams();
   const {
     placeOrder,
@@ -20,6 +20,10 @@ export default function Cart() {
   } = useMenu();
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log("table no cart = ", tableNo);
+  }, [tableNo]);
 
   const handleCheckout = async () => {
     if (cart.length === 0) return alert("Cart is empty!");
@@ -68,7 +72,10 @@ export default function Cart() {
               placeholder="Enter table number"
               className="input input-bordered"
               value={tableNo}
-              onChange={(e) => setTableNo(e.target.value)}
+              onChange={(e) => {
+                setTableNo(e.target.value);
+                localStorage.setItem("tableNo", e.target.value);
+              }}
             />
           </div>
 
