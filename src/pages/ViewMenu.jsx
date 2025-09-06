@@ -29,7 +29,7 @@ export default function ViewMenu() {
       <h2 className=" text-2xl font-bold p-3">View Menu</h2>
       <hr />
       <div className="overflow-x-auto p-3">
-        {Object.values(menu).map((section) => (
+        {menu && Object.values(menu).map((section) => (
           <div key={section.category} className="mb-8">
             {/* Category Heading */}
             <h2 className="text-2xl font-bold mb-4">{section.category}</h2>

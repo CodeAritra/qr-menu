@@ -73,6 +73,22 @@ export const MenuProvider = ({ children }) => {
       if (snap.exists()) {
         const cafeData = snap.data();
 
+        // ✅ Trial validation
+        if (cafeData.trial) {
+          const now = new Date('2025-09-28T03:21:52.861Z');
+          // const now = new Date();
+          const end = new Date(cafeData.trial.endDate);
+
+          if (now > end && !cafeData.trial.expired) {
+            await updateDoc(cafeRef, {
+              "trial.isActive": false,
+              "trial.expired": true,
+            });
+            cafeData.trial.isActive = false;
+            cafeData.trial.expired = true;
+          }
+        }
+
         // ✅ Optional: validate cafeName from URL
         if (
           cafeName &&
@@ -117,6 +133,10 @@ export const MenuProvider = ({ children }) => {
         let username = "Unknown";
         if (userSnap.exists()) username = userSnap.data().username;
 
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(startDate.getDate() + 15); // 15 days trial
+
         await setDoc(
           cafeRef,
           {
@@ -130,6 +150,12 @@ export const MenuProvider = ({ children }) => {
               },
             },
             serviceType: "menu", //  default
+            trial: {
+              isActive: true,
+              startDate: startDate.toISOString(),
+              endDate: endDate.toISOString(),
+              expired: false,
+            },
           },
           { merge: true }
         );
@@ -434,6 +460,7 @@ export const MenuProvider = ({ children }) => {
         clearCart,
         completeOrder,
         totalAmount,
+        trial: cafe?.trial || null,
       }}
     >
       {children}

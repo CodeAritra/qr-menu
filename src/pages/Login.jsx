@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import {useAuth} from "../context/useAuth";
+import { useAuth } from "../context/useAuth";
 
 export default function Login() {
   const { login } = useAuth();
@@ -13,10 +13,12 @@ export default function Login() {
   const handleLogin = async (e) => {
     try {
       e.preventDefault();
-      const success = await login(username, password);
-      if (success) {
+      const user = await login(username, password);
+      if (user) {
         toast.success("Login successful, Welcome!");
-        navigate("/admin");
+        console.log("user login = ", user);
+
+        navigate(`/admin/${username}/${user.uid}`);
       }
     } catch (error) {
       toast.error("Login failed");

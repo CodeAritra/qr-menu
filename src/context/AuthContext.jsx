@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }) => {
         createdAt: new Date(),
       });
 
-      console.log("User created:", username);
+      // console.log("User created:", username);
     } catch (error) {
       console.error("Signup error:", error.message);
     }
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
         email,
         password
       );
-      console.log("Logged in as:", username);
+      // console.log("Logged in as:", userCredential);
       return userCredential.user;
     } catch (error) {
       console.error("Login error:", error.message);

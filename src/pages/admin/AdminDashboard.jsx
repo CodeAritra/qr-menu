@@ -4,10 +4,12 @@ import { db } from "../../firebase";
 import toast from "react-hot-toast";
 import Navbar from "../../components/Navbar";
 import { Outlet, useParams } from "react-router-dom";
+import { useMenu } from "../../context/useMenu";
 
 export default function AdminDashboard() {
   const { cafeId } = useParams();
   const [orders, setOrders] = useState([]);
+  const { cafe, trial } = useMenu();
 
   // 🔊 function to play notification sound
   const playSound = () => {
@@ -43,6 +45,17 @@ export default function AdminDashboard() {
 
     return () => unsub();
   }, [cafeId, orders.length]);
+
+  if (trial?.expired) {
+    return (
+      <div className="p-6 text-center">
+        <h1 className="text-3xl font-bold">🚨 Trial Expired</h1>
+        <p className="mt-2">
+          Your free trial for {cafe.name} has ended. Please contact owner.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>

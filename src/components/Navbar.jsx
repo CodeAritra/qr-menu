@@ -10,9 +10,9 @@ export default function Navbar({ categories, onSearch, onFilter }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
 
-  const { user } = useMenu();
+  const { user, cafe } = useMenu();
 
-  // console.log("user nav == ", user);
+  // console.log("user nav == ", cafe?.serviceType);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -63,7 +63,10 @@ export default function Navbar({ categories, onSearch, onFilter }) {
                   </Link>
                 </li>
                 <li>
-                  <Link to="order-history" className="btn btn-ghost btn-primary">
+                  <Link
+                    to="order-history"
+                    className="btn btn-ghost btn-primary"
+                  >
                     History
                   </Link>
                 </li>
@@ -126,7 +129,12 @@ export default function Navbar({ categories, onSearch, onFilter }) {
       {!user && (
         <>
           <div className="flex-1">
-            <a className="text-2xl font-bold text-primary" onClick={()=>navigate("")}>QRMenu</a>
+            <a
+              className="text-2xl font-bold text-primary"
+              onClick={() => navigate("")}
+            >
+              QRMenu
+            </a>
           </div>
 
           <div className="flex items-center">
@@ -167,9 +175,14 @@ export default function Navbar({ categories, onSearch, onFilter }) {
             </select> */}
 
             {/* Shopping Cart */}
-            <button className="btn btn-ghost btn-square">
-              <ShoppingCart className="h-6 w-6 text-primary" onClick={()=>navigate("cart")}/>
-            </button>
+            {cafe?.serviceType == "order" && (
+              <button className="btn btn-ghost btn-square">
+                <ShoppingCart
+                  className="h-6 w-6 text-primary"
+                  onClick={() => navigate("cart")}
+                />
+              </button>
+            )}
           </div>
         </>
       )}
