@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Outlet } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import ViewMenu from "../ViewMenu";
@@ -19,10 +20,10 @@ export default function ClientDashboard() {
     }
   }, [searchParams]);
 
-  useEffect(()=>{
-    console.log("table no = ",tableNo);
+  // useEffect(()=>{
+  //   console.log("table no = ",tableNo);
     
-  },[tableNo])
+  // },[tableNo])
 
   if (trial?.expired) {
     return (

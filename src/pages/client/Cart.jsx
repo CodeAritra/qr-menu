@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import { useMenu } from "../../context/useMenu"; // to get cafe info
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -21,9 +21,9 @@ export default function Cart() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    console.log("table no cart = ", tableNo);
-  }, [tableNo]);
+  // useEffect(() => {
+  //   console.log("table no cart = ", tableNo);
+  // }, [tableNo]);
 
   const handleCheckout = async () => {
     if (cart.length === 0) return alert("Cart is empty!");
