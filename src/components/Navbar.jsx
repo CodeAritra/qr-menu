@@ -12,7 +12,7 @@ export default function Navbar({ categories, onSearch, onFilter }) {
 
   const { user } = useMenu();
 
-  console.log("user nav == ", user);
+  // console.log("user nav == ", user);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);

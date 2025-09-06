@@ -1,23 +1,49 @@
-/* eslint-disable no-unused-vars */
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Outlet,
-} from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "../../firebase";
+import toast from "react-hot-toast";
 import Navbar from "../../components/Navbar";
-
-import { db, auth } from "../../firebase";
-import { doc, getDoc, updateDoc, onSnapshot } from "firebase/firestore";
-import { toast } from "react-hot-toast";
-import { useAuth } from "../../context/useAuth";
+import { Outlet, useParams } from "react-router-dom";
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { cafeId } = useParams();
+  const [orders, setOrders] = useState([]);
+
+  // 🔊 function to play notification sound
+  const playSound = () => {
+    const audio = new Audio("/notification.mp3"); // put notification.mp3 in your public folder
+    audio.play().catch((err) => console.log("Sound play error:", err));
+  };
+
   useEffect(() => {
-    console.log("user == ", user);
-  }, [user]);
+    if (!cafeId) return;
+
+    const cafeRef = doc(db, "cafes", cafeId);
+
+    const unsub = onSnapshot(cafeRef, (snap) => {
+      if (!snap.exists()) return;
+      const data = snap.data();
+      const newOrders = data.orders || [];
+
+      // detect new order
+      if (newOrders.length > orders.length) {
+        const latestOrder = newOrders[newOrders.length - 1];
+
+        // ✅ show toast
+        toast.success(
+          `🛎️ New Order from ${latestOrder.customerName} (Table ${latestOrder.tableNo})`
+        );
+
+        // ✅ play sound
+        playSound();
+      }
+
+      setOrders(newOrders);
+    });
+
+    return () => unsub();
+  }, [cafeId, orders.length]);
+
   return (
     <>
       {/* Main Section */}
@@ -25,23 +51,6 @@ export default function AdminDashboard() {
         <Navbar user={true} />
 
         <main className="flex-1 p-4 md:p-6 bg-gray-50">
-          {/* <Routes>
-            <Route path="/" element={<ViewMenu menu={menu} />} />
-            <Route
-              path="/create"
-              element={<CreateMenu addMenuItem={addMenuItem} />}
-            />
-            <Route
-              path="/update"
-              element={
-                <UpdateMenu
-                  menu={menu}
-                  updateItem={updateItem}
-                  deleteItem={deleteItem}
-                />
-              }
-            />
-          </Routes> */}
           <Outlet />
         </main>
       </div>

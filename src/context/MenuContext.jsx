@@ -293,11 +293,11 @@ export const MenuProvider = ({ children }) => {
     let orderHistory = data.orderHistory || [];
 
     // Debug log all orderIds
-    console.log(
+    /*console.log(
       "Existing Orders:",
       orders.map((o) => o.orderId)
     );
-    console.log("Looking for:", orderId);
+    console.log("Looking for:", orderId);*/
 
     // Find the order
     const orderIndex = orders.findIndex((o) => o.orderId === orderId);
@@ -384,23 +384,23 @@ export const MenuProvider = ({ children }) => {
   };
 
   // Update qty
-   const increaseQty = (id) => {
-     setCart((prev) =>
-       prev.map((item) =>
-         item.id === id ? { ...item, qty: item.qty + 1 } : item
-       )
-     );
-   };
+  const increaseQty = (id) => {
+    setCart((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, qty: item.qty + 1 } : item
+      )
+    );
+  };
 
-   const decreaseQty = (id) => {
-     setCart((prev) =>
-       prev
-         .map((item) =>
-           item.id === id ? { ...item, qty: Math.max(1, item.qty - 1) } : item
-         )
-         .filter((item) => item.qty > 0)
-     );
-   };
+  const decreaseQty = (id) => {
+    setCart((prev) =>
+      prev
+        .map((item) =>
+          item.id === id ? { ...item, qty: Math.max(1, item.qty - 1) } : item
+        )
+        .filter((item) => item.qty > 0)
+    );
+  };
 
   // Clear cart
   const clearCart = () => setCart([]);
@@ -416,7 +416,8 @@ export const MenuProvider = ({ children }) => {
       value={{
         menu,
         cafe,
-        loading,setLoading,
+        loading,
+        setLoading,
         addItem,
         updateItem,
         deleteItem,
@@ -424,12 +425,15 @@ export const MenuProvider = ({ children }) => {
         fetchCafe,
         listenOrders,
         updateOrderStatus,
-        placeOrder,cart,
+        placeOrder,
+        cart,
         addToCart,
         removeFromCart,
-        increaseQty,decreaseQty,
+        increaseQty,
+        decreaseQty,
         clearCart,
-        completeOrder,totalAmount
+        completeOrder,
+        totalAmount,
       }}
     >
       {children}

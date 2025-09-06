@@ -11,7 +11,7 @@ export default function ViewMenu() {
 
   useEffect(() => {
     if (!cafeId) return; // only run on customer pages
-    console.log("Cafe id ", cafeId);
+    // console.log("Cafe id ", cafeId);
 
     fetchCafe(cafeId, cafeName);
   }, [fetchCafe, cafeId, cafeName]);
@@ -144,7 +144,7 @@ export default function ViewMenu() {
                   className="btn btn-primary"
                   onClick={() => {
                     addToCart(editItem)
-                    console.log("Order placed:", editItem);
+                    // console.log("Order placed:", editItem);
                     setEditItem(null);
                   }}
                 >
