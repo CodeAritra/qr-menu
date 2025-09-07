@@ -7,9 +7,9 @@ export default function CafeQRCode() {
   const qrRef = useRef(null);
 
   const cafeName = "aritra";
-  const cafeId = "Ff5XPmHNm3Mmber4P4ttFW6dfdf2";
+  const cafeId = "YefNZlosfzWnsZOhqCQP5OGbGm33";
   // const menuUrl = `https://myqrmenu.com/${cafeName}/${cafeId}`;
-  const menuUrl = `http://192.168.10.3:5173/${cafeName}/${cafeId}`;
+  const menuUrl = `qr-menu-ed60e.web.app/${cafeName}/${cafeId}`;
 
   /*const downloadPNG = () => {
     const canvas = qrRef.current; // <canvas> element
