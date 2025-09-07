@@ -2,15 +2,16 @@
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
 import { useState } from "react";
-import { logout } from "../services/auth";
 import toast from "react-hot-toast";
 import { useMenu } from "../context/useMenu";
+import { useAuth } from "../context/useAuth";
 
 export default function Navbar({ categories, onSearch, onFilter }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
 
   const { user, cafe } = useMenu();
+  const {logout} = useAuth()
 
   // console.log("user nav == ", cafe?.serviceType);
 

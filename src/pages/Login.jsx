@@ -16,7 +16,7 @@ export default function Login() {
       const user = await login(username, password);
       if (user) {
         toast.success("Login successful, Welcome!");
-        console.log("user login = ", user);
+        // console.log("user login = ", user);
 
         navigate(`/admin/${username}/${user.uid}`);
       }

@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 
 export default function OrderHistory() {
   const [orders, setOrders] = useState([]);
-  const {cafeId} = useParams()
+  const { cafeId } = useParams();
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, "cafes", cafeId), (snap) => {
@@ -15,6 +15,10 @@ export default function OrderHistory() {
     });
     return () => unsub();
   }, [cafeId]);
+
+  useEffect(() => {
+    console.log("orders = ", orders);
+  }, [orders]);
 
   return (
     <div className="p-4">
@@ -32,6 +36,7 @@ export default function OrderHistory() {
                 <th>Table</th>
                 <th>Items</th>
                 <th>Total</th>
+                <th>Order At</th>
                 <th>Completed At</th>
               </tr>
             </thead>
@@ -50,13 +55,18 @@ export default function OrderHistory() {
                       <ul className="list-disc list-inside text-sm">
                         {order.items.map((i, idx) => (
                           <li key={idx}>
-                            {i.name} × {i.qty || 1} = ₹
-                            {i.price * (i.qty || 1)}
+                            {i.name} × {i.qty || 1} = ₹{i.price * (i.qty || 1)}
                           </li>
                         ))}
                       </ul>
                     </td>
                     <td className="font-bold">₹{order.totalAmount}</td>
+                    <td>
+                      {new Date(order.createdAt).toLocaleString("en-IN", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </td>
                     <td>
                       {new Date(order.updatedAt).toLocaleString("en-IN", {
                         dateStyle: "short",

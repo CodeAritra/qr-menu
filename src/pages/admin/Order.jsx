@@ -40,8 +40,13 @@ export default function Order() {
                     <h2 className="card-title">
                       🧾 Table no - {order.tableNo}
                     </h2>
-                    <h2 className="card-title">🧾 Order date - {order.date}</h2>
-                    <h2 className="card-title">🧾 Order time - {order.time}</h2>
+                    <h2 className="card-title">
+                      🧾 Order at -{" "}
+                      {new Date(order.createdAt).toLocaleString("en-IN", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </h2>
                   </div>
 
                   <span
@@ -80,7 +85,9 @@ export default function Order() {
                     {order.status === "pending" && (
                       <button
                         className="btn btn-sm btn-info join-item"
-                        onClick={() => updateOrderStatus(cafeId,order.orderId, "completed")}
+                        onClick={() =>
+                          updateOrderStatus(cafeId, order.orderId, "completed")
+                        }
                       >
                         Mark Completed
                       </button>
