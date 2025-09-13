@@ -75,7 +75,7 @@ export const MenuProvider = ({ children }) => {
 
         // ✅ Trial validation
         if (cafeData.trial) {
-          const now = new Date('2025-09-28T03:21:52.861Z');
+          const now = new Date("2025-09-28T03:21:52.861Z");
           // const now = new Date();
           const end = new Date(cafeData.trial.endDate);
 
@@ -295,7 +295,7 @@ export const MenuProvider = ({ children }) => {
     await updateDoc(cafeRef, { orders });
   };
 
-  const listenOrders = (cafeId, setOrders) => {
+  /*const listenOrders = (cafeId, setOrders) => {
     const cafeRef = doc(db, "cafes", cafeId);
     return onSnapshot(cafeRef, (snap) => {
       if (snap.exists()) {
@@ -305,6 +305,69 @@ export const MenuProvider = ({ children }) => {
       } else {
         setOrders([]);
       }
+    });
+  };*/
+
+  const listenOrders = (cafeId, setOrders) => {
+    const cafeRef = doc(db, "cafes", cafeId);
+
+    let prevIds = new Set();
+
+    // initialize prevIds once
+    (async () => {
+      const snap = await getDoc(cafeRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        prevIds = new Set((data.orders || []).map((o) => o.orderId));
+      }
+    })();
+
+    return onSnapshot(cafeRef, (snap) => {
+      if (!snap.exists()) {
+        setOrders([]);
+        prevIds = new Set();
+        return;
+      }
+
+      const data = snap.data();
+      const orders = data.orders || [];
+      setOrders(orders);
+
+      // find new orders
+      const newOnes = orders.filter((o) => !prevIds.has(o.orderId));
+      if (newOnes.length > 0) {
+        newOnes.forEach((order) => {
+          // show toast
+          toast.success(
+            `New order from ${order.customerName || "Guest"} (Table ${
+              order.tableNo || "-"
+            })`
+          );
+
+          // play sound (place notification.mp3 inside /public)
+          try {
+            const audio = new Audio("/notification.mp3");
+            audio.play().catch(() => {});
+          } catch (e) {
+            console.error("Sound play error:", e);
+          }
+
+          // browser notification (optional)
+          if (
+            "Notification" in window &&
+            Notification.permission === "granted"
+          ) {
+            new Notification("🍔 New Order", {
+              body: `${order.customerName || "Guest"} • Table ${
+                order.tableNo || "-"
+              }`,
+            });
+          }
+        });
+      }
+
+      // update prevIds
+      prevIds = new Set(orders.map((o) => o.orderId));
     });
   };
 

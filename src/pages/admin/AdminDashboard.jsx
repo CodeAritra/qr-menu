@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase";
@@ -11,7 +12,7 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState([]);
   const { cafe, trial } = useMenu();
 
-  // 🔊 function to play notification sound
+  /*// 🔊 function to play notification sound
   const playSound = () => {
     const audio = new Audio("/notification.mp3"); // put notification.mp3 in your public folder
     audio.play().catch((err) => console.log("Sound play error:", err));
@@ -44,7 +45,13 @@ export default function AdminDashboard() {
     });
 
     return () => unsub();
-  }, [cafeId, orders.length]);
+  }, [cafeId, orders.length]);*/
+
+  useEffect(() => {
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+}, []);
 
   if (trial?.expired) {
     return (
