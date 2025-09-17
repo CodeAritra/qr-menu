@@ -1,5 +1,6 @@
 import {  useState } from "react";
-import { useMenu } from "../../context/useMenu"; // to get cafe info
+import { useMenu } from "../../context/useMenu"; 
+import { useCart } from "../../context/useCart"; 
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 
@@ -9,15 +10,17 @@ export default function Cart() {
   const { cafeId, cafeName } = useParams();
   const {
     placeOrder,
-    clearCart,
-    cart,
-    increaseQty,
-    decreaseQty,
-    removeFromCart,
-    totalAmount,
     loading,
     setLoading,
   } = useMenu();
+
+  const {cart,
+        removeFromCart,
+        increaseQty,
+        decreaseQty,
+        clearCart,
+
+        totalAmount,} = useCart()
 
   const navigate = useNavigate();
 

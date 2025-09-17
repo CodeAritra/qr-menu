@@ -1,18 +1,12 @@
 import { useEffect, useState } from "react";
 import { useMenu } from "../context/useMenu";
+import { useCart } from "../context/useCart";
 import { useParams } from "react-router-dom";
 
 export default function ViewMenu() {
-  const {
-    menu,
-    loading,
-    updateItem,
-    deleteItem,
-    user,
-    cafe,
-    fetchCafe,
-    addToCart,
-  } = useMenu();
+  const { menu, loading, updateItem, deleteItem, user, cafe, fetchCafe } =
+    useMenu();
+  const { addToCart } = useCart();
   const [editItem, setEditItem] = useState(null);
 
   const { cafeName, cafeId } = useParams();
