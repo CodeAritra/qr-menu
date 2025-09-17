@@ -13,7 +13,7 @@ export default function Navbar({ categories, onSearch, onFilter }) {
   const { user, cafe } = useMenu();
   const {logout} = useAuth()
 
-  // console.log("user nav == ", cafe?.serviceType);
+  console.log("user nav == ", cafe);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -134,13 +134,13 @@ export default function Navbar({ categories, onSearch, onFilter }) {
               className="text-2xl font-bold text-primary"
               onClick={() => navigate("")}
             >
-              QRMenu
+              {cafe?.name}
             </a>
           </div>
 
           <div className="flex items-center">
             {/* Search */}
-            <label className="input">
+            {/*<label className="input">
               <svg
                 className="h-5 w-5 opacity-50"
                 xmlns="http://www.w3.org/2000/svg"
@@ -159,7 +159,7 @@ export default function Navbar({ categories, onSearch, onFilter }) {
                 value={searchTerm}
                 onChange={handleSearchChange}
               />
-            </label>
+            </label>*/}
 
             {/* Category Filter */}
             {/* <select
