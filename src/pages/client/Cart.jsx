@@ -1,6 +1,7 @@
-import {  useState } from "react";
-import { useMenu } from "../../context/useMenu"; 
-import { useCart } from "../../context/useCart"; 
+import { useState } from "react";
+import { useMenu } from "../../context/useMenu";
+import { useCart } from "../../context/useCart";
+import { useOrder } from "../../context/useOrder";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 
@@ -8,19 +9,16 @@ export default function Cart() {
   const [customerName, setCustomerName] = useState("");
   const [tableNo, setTableNo] = useState(localStorage.getItem("tableNo") || "");
   const { cafeId, cafeName } = useParams();
+  const { loading, setLoading } = useMenu();
   const {
-    placeOrder,
-    loading,
-    setLoading,
-  } = useMenu();
-
-  const {cart,
-        removeFromCart,
-        increaseQty,
-        decreaseQty,
-        clearCart,
-
-        totalAmount,} = useCart()
+    cart,
+    removeFromCart,
+    increaseQty,
+    decreaseQty,
+    clearCart,
+    totalAmount,
+  } = useCart();
+  const {placeOrder} = useOrder()
 
   const navigate = useNavigate();
 

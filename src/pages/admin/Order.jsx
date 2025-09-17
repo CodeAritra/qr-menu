@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useMenu } from "../../context/useMenu";
+import { useOrder } from "../../context/useOrder";
 import { useParams } from "react-router-dom";
 
 export default function Order() {
   const { cafeId } = useParams();
   const [orders, setOrders] = useState([]);
-  const { listenOrders, updateOrderStatus } = useMenu();
+  const { listenOrders, updateOrderStatus } = useOrder();
 
   useEffect(() => {
     const unsub = listenOrders(cafeId, setOrders);

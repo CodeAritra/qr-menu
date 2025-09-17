@@ -6,6 +6,7 @@ import { Toaster } from "react-hot-toast";
 import { MenuProvider } from "./context/MenuContext.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
+import { OrderProvider } from "./context/OrderContext.jsx";
 
 createRoot(document.getElementById("root")).render(
   // <StrictMode>
@@ -13,8 +14,10 @@ createRoot(document.getElementById("root")).render(
     <AuthProvider>
       <MenuProvider>
         <CartProvider>
-          <App />
-          <Toaster position="top-right" reverseOrder={false} />
+          <OrderProvider>
+            <App />
+            <Toaster position="top-right" reverseOrder={false} />
+          </OrderProvider>
         </CartProvider>
       </MenuProvider>
     </AuthProvider>
