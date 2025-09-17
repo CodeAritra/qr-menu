@@ -1,7 +1,10 @@
+/* eslint-disable no-unused-vars */
 import { useState } from "react";
 import { useMenu } from "../../context/useMenu";
+import { useParams } from "react-router-dom";
 
 export default function CreateMenu() {
+   const {cafeId} = useParams()
   const { addItem } = useMenu();
   const [item, setItem] = useState({
   id: Date.now(),

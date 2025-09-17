@@ -13,7 +13,7 @@ export default function Navbar({ categories, onSearch, onFilter }) {
   const { user, cafe } = useMenu();
   const {logout} = useAuth()
 
-  console.log("user nav == ", cafe);
+  // console.log("user nav == ", cafe);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);

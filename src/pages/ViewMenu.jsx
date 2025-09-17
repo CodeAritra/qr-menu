@@ -3,8 +3,16 @@ import { useMenu } from "../context/useMenu";
 import { useParams } from "react-router-dom";
 
 export default function ViewMenu() {
-  const { menu, loading, updateItem, deleteItem, user, cafe, fetchCafe,addToCart } =
-    useMenu();
+  const {
+    menu,
+    loading,
+    updateItem,
+    deleteItem,
+    user,
+    cafe,
+    fetchCafe,
+    addToCart,
+  } = useMenu();
   const [editItem, setEditItem] = useState(null);
 
   const { cafeName, cafeId } = useParams();
@@ -16,11 +24,11 @@ export default function ViewMenu() {
     fetchCafe(cafeId, cafeName);
   }, [fetchCafe, cafeId, cafeName]);
 
-  // useEffect(() => {
-  //   console.log("user == ", user);
-  //   console.log("menu == ", menu);
-  //   console.log("cafe == ", cafe);
-  // }, [user, menu, cafe]);
+  useEffect(() => {
+    //   console.log("user == ", user);
+    console.log("menu == ", menu);
+    //   console.log("cafe == ", cafe);
+  }, [user, menu, cafe]);
 
   if (loading) return <div className="p-4 text-center">Loading menu...</div>;
 
@@ -29,37 +37,38 @@ export default function ViewMenu() {
       <h2 className=" text-2xl font-bold p-3">View Menu</h2>
       <hr />
       <div className="overflow-x-auto p-3">
-        {menu && Object.values(menu).map((section) => (
-          <div key={section.category} className="mb-8">
-            {/* Category Heading */}
-            <h2 className="text-2xl font-bold mb-4">{section.category}</h2>
+        {menu &&
+          menu.map((section) => (
+            <div key={section.name} className="mb-8">
+              {/* Category Heading */}
+              <h2 className="text-2xl font-bold mb-4">{section.name}</h2>
 
-            {/* Items inside category */}
-            <ul className="space-y-2">
-              {section.items.map((item) => (
-                <li
-                  key={item.id}
-                  className="flex justify-between items-center p-3 border rounded-lg shadow-sm bg-white cursor-pointer"
-                  onClick={() =>
-                    setEditItem({
-                      userId: user?.uid || cafe?.ownerId,
-                      category: section.category,
-                      ...item,
-                    })
-                  }
-                >
-                  <div>
-                    <p className="font-medium">{item.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {item.available ? "Available ✅" : "Not Available ❌"}
-                    </p>
-                  </div>
-                  <span className="font-semibold">₹{item.price}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+              {/* Items inside category */}
+              <ul className="space-y-2">
+                {section.items.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex justify-between items-center p-3 border rounded-lg shadow-sm bg-white cursor-pointer"
+                    onClick={() =>
+                      setEditItem({
+                        userId: user?.uid || cafe?.ownerId,
+                        category: section.category,
+                        ...item,
+                      })
+                    }
+                  >
+                    <div>
+                      <p className="font-medium">{item.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {item.available ? "Available ✅" : "Not Available ❌"}
+                      </p>
+                    </div>
+                    <span className="font-semibold">₹{item.price}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
 
         {/* --- Admin Edit Modal --- */}
         {user && editItem && (
@@ -143,7 +152,7 @@ export default function ViewMenu() {
                 <button
                   className="btn btn-primary"
                   onClick={() => {
-                    addToCart(editItem)
+                    addToCart(editItem);
                     // console.log("Order placed:", editItem);
                     setEditItem(null);
                   }}

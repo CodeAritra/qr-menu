@@ -1,13 +1,26 @@
+/* eslint-disable no-unused-vars */
 import { createContext, useCallback, useEffect, useState } from "react";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, onSnapshot, updateDoc, setDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  onSnapshot,
+  updateDoc,
+  setDoc,
+  getDocs,
+  addDoc,
+  serverTimestamp,
+  collection,
+  query,
+  orderBy,
+} from "firebase/firestore";
 import { toast } from "react-hot-toast";
 
 const MenuContext = createContext();
 
 export const MenuProvider = ({ children }) => {
-  const [menu, setMenu] = useState({});
+  const [menu, setMenu] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [cafe, setCafe] = useState(null); // ✅ store cafe info
@@ -65,6 +78,7 @@ export const MenuProvider = ({ children }) => {
 
   // 🔹 Customer-side: fetch menu using cafeId + cafeName
   // --- CRUD Methods (same as before) ---
+
   const fetchCafe = useCallback(async (cafeId, cafeName) => {
     try {
       const cafeRef = doc(db, "cafes", cafeId);
@@ -73,35 +87,22 @@ export const MenuProvider = ({ children }) => {
       if (snap.exists()) {
         const cafeData = snap.data();
 
-        // ✅ Trial validation
-        if (cafeData.trial) {
-          const now = new Date("2025-09-28T03:21:52.861Z");
-          // const now = new Date();
-          const end = new Date(cafeData.trial.endDate);
+        // fetch menu from subcollection
+        const q = query(
+          collection(db, "cafes", cafeId, "menu"),
+          orderBy("createdAt", "asc")
+        );
 
-          if (now > end && !cafeData.trial.expired) {
-            await updateDoc(cafeRef, {
-              "trial.isActive": false,
-              "trial.expired": true,
-            });
-            cafeData.trial.isActive = false;
-            cafeData.trial.expired = true;
-          }
-        }
-
-        // ✅ Optional: validate cafeName from URL
-        if (
-          cafeName &&
-          cafeData.name.toLowerCase().replace(/\s+/g, "") !==
-            cafeName.toLowerCase()
-        ) {
-          console.warn("⚠️ Cafe name mismatch with URL");
-        }
+        const menuSnap = await getDocs(q);
+        const menuItems = menuSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
 
         setCafe(cafeData);
-        setMenu(cafeData.menu || {});
+        setMenu(menuItems);
       } else {
-        setMenu(null);
+        setMenu([]);
       }
     } catch (err) {
       console.error("🔥 Error fetching menu:", err);
@@ -110,122 +111,115 @@ export const MenuProvider = ({ children }) => {
     }
   }, []);
 
-  const addItem = async (category, newItem) => {
+  // Add Item
+  const addItem = async (categoryName, newItem) => {
     try {
       if (!user) return console.error("❌ User not logged in");
-      if (!category || category.trim() === "") {
+      if (!categoryName || categoryName.trim() === "")
         return console.error("❌ Category is missing");
-      }
+
+      const cafeId = user.uid;
+      const categoryId = categoryName.toLowerCase().replace(/\s+/g, "-"); // make it URL-safe
+
+      const categoryRef = doc(db, "cafes", cafeId, "menu", categoryId);
+      const categorySnap = await getDoc(categoryRef);
 
       const itemToAdd = {
         ...newItem,
-        available: true,
         price: Number(newItem.price),
+        available: true,
+        createdAt: new Date(), // ⚠️ Use JS Date, not serverTimestamp() inside array
+        id: newItem.name.toLowerCase().replace(/\s+/g, "-"), // optional: unique id per item
       };
 
-      const cafeRef = doc(db, "cafes", user.uid);
-      const cafeSnap = await getDoc(cafeRef);
+      if (!categorySnap.exists()) {
+        // Category doesn't exist → create new category document
+        await setDoc(categoryRef, {
+          name: categoryName,
+          items: [itemToAdd],
+          createdAt: new Date(),
+        });
 
-      if (!cafeSnap.exists()) {
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-
-        let username = "Unknown";
-        if (userSnap.exists()) username = userSnap.data().username;
-
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setDate(startDate.getDate() + 15); // 15 days trial
-
-        await setDoc(
-          cafeRef,
-          {
-            name: username,
-            ownerId: user.uid,
-            createdAt: new Date().toISOString(),
-            menu: {
-              [category]: {
-                category,
-                items: [itemToAdd],
-              },
-            },
-            serviceType: "menu", //  default
-            trial: {
-              isActive: true,
-              startDate: startDate.toISOString(),
-              endDate: endDate.toISOString(),
-              expired: false,
-            },
-          },
-          { merge: true }
-        );
-        toast.success("Item added!");
-
-        setMenu({ [category]: { category, items: [itemToAdd] } });
+        toast.success("Category & item added!");
+        return { categoryId, items: [itemToAdd] };
       } else {
-        let existingMenu = cafeSnap.data().menu || {};
-        if (!existingMenu[category]) {
-          existingMenu[category] = { category, items: [] };
-        }
-        existingMenu[category].items.push(itemToAdd);
+        // Category exists → append item to items array
+        const existingItems = categorySnap.data().items || [];
+        await updateDoc(categoryRef, { items: [...existingItems, itemToAdd] });
 
-        await updateDoc(cafeRef, { menu: existingMenu });
-        toast.success("Item added!");
-
-        setMenu(existingMenu);
+        toast.success("Item added to existing category!");
+        return { categoryId, items: [...existingItems, itemToAdd] };
       }
     } catch (err) {
       console.error("🔥 Error adding item:", err);
+      toast.error("Failed to add item");
     }
   };
 
-  const updateItem = async (userId, category, updatedItem) => {
+  //update item
+  const updateItem = async (userId, categoryId, updatedItem) => {
     try {
-      const cafeRef = doc(db, "cafes", userId);
-      const snap = await getDoc(cafeRef);
-      if (!snap.exists()) return toast.error("Cafe not found!");
+      // console.log("category id = ", categoryId);
 
-      const menu = snap.data().menu || {};
-      if (!menu[category]) return toast.error("Category not found!");
-
-      menu[category].items = menu[category].items.map((item) =>
-        item.id === updatedItem.id ? updatedItem : item
+      const categoryRef = doc(
+        db,
+        "cafes",
+        userId,
+        "menu",
+        categoryId.toLowerCase()
       );
+      const snap = await getDoc(categoryRef);
 
-      await updateDoc(cafeRef, { menu });
+      if (!snap.exists()) {
+        toast.error("Category not found!");
+        return;
+      }
+
+      const items = snap
+        .data()
+        .items.map((item) =>
+          item.id === updatedItem.id
+            ? { ...item, ...updatedItem, price: Number(updatedItem.price) }
+            : item
+        );
+
+      await updateDoc(categoryRef, { items });
       toast.success("Item updated!");
-      return menu;
+      return items;
     } catch (err) {
-      console.error(err);
+      console.error("🔥 Error updating item:", err);
       toast.error("Failed to update item");
     }
   };
 
-  const deleteItem = async (userId, category, itemId) => {
+  // Delete item inside a category
+  const deleteItem = async (userId, categoryId, itemId) => {
     try {
-      const cafeRef = doc(db, "cafes", userId);
-      const snap = await getDoc(cafeRef);
-      if (!snap.exists()) return toast.error("Cafe not found!");
-
-      const menu = snap.data().menu || {};
-      if (!menu[category]) return toast.error("Category not found!");
-
-      menu[category].items = menu[category].items.filter(
-        (item) => item.id !== itemId
+      const categoryRef = doc(
+        db,
+        "cafes",
+        userId,
+        "menu",
+        categoryId.toLowerCase()
       );
+      const snap = await getDoc(categoryRef);
 
-      if (menu[category].items.length === 0) {
-        delete menu[category];
+      if (!snap.exists()) {
+        toast.error("Category not found!");
+        return;
       }
 
-      await updateDoc(cafeRef, { menu });
+      const items = snap.data().items.filter((item) => item.id !== itemId);
+
+      await updateDoc(categoryRef, { items });
       toast.success("Item deleted!");
-      return menu;
+      return items;
     } catch (err) {
-      console.error(err);
+      console.error("🔥 Error deleting item:", err);
       toast.error("Failed to delete item");
     }
   };
+
 
   //order
   const placeOrder = async (
