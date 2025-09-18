@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 export default function Order() {
   const { cafeId } = useParams();
   const [orders, setOrders] = useState([]);
-  const { listenOrders, completeOrder } = useOrder();
+  const { listenOrders, completeOrder, dismissBadge } = useOrder();
 
   useEffect(() => {
     const unsub = listenOrders(cafeId, setOrders);
@@ -16,7 +16,7 @@ export default function Order() {
      console.log("orders = ", orders);
    }, [orders]);*/
 
-  const handleItemClick = (orderId, itemName) => {
+  /*const handleItemClick = (orderId, itemName) => {
     setOrders((prev) =>
       prev.map((order) => {
         if (order.id !== orderId) return order;
@@ -28,7 +28,7 @@ export default function Order() {
         return { ...order, items: updatedItems };
       })
     );
-  };
+  };*/
 
   return (
     <div className="p-6">
@@ -84,7 +84,9 @@ export default function Order() {
                     <li
                       key={idx}
                       className="flex justify-between items-center p-2 bg-base-200 rounded-lg"
-                      onClick={() => handleItemClick(order.id, item.name)} // mark as seen
+                      onClick={() =>
+                        dismissBadge(cafeId, order.id, item.name)
+                      } // mark as seen
                     >
                       <span>
                         {item.qty || 1} × {item.name}
