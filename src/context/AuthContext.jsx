@@ -52,12 +52,7 @@ export const AuthProvider = ({ children }) => {
         ownerId: userCredential.user.uid,
         serviceType: "menu", // default service type
         createdAt: serverTimestamp(),
-        trial: {
-          isActive: true,
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-          expired: false,
-        },
+        activated: true,
       });
       toast.success("Signup successfull");
       // console.log("User created:", username);

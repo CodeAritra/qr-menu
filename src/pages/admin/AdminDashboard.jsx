@@ -95,10 +95,10 @@ export default function AdminDashboard() {
   }, []);
 
   /*useEffect(() => {
-    console.log("cafe = ", cafe?.trial);
+    console.log("cafe = ", cafe?.activated);
   }, [cafe]);*/
 
-  if (!cafe?.trial) {
+  if (cafe?.activated === false) {
     return (
       <div className="p-6 text-center">
         <h1 className="text-3xl font-bold">🚨 Trial Expired</h1>
