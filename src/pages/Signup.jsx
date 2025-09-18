@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
 import { useAuth } from "../context/useAuth";
 
 export default function Signup() {
@@ -13,14 +12,10 @@ export default function Signup() {
   const handleSignup = async (e) => {
     try {
       e.preventDefault();
-      const success = await signup(username, password);
-      if (success) {
-        toast.success("Signup successful! Please login.");
-        navigate("/login");
-      }
+      await signup(username, password);
+      navigate("/login");
     } catch (error) {
       console.log(error);
-      toast.error("Signup failed");
     }
   };
 

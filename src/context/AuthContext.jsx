@@ -6,8 +6,9 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase";
+import toast from "react-hot-toast";
 
 const AuthContext = createContext();
 
@@ -37,16 +38,31 @@ export const AuthProvider = ({ children }) => {
         password
       );
 
-      // Save user details in Firestore
-      await setDoc(doc(db, "users", userCredential.user.uid), {
-        username,
-        email,
-        // serviceType: "menu", //  default
-        createdAt: new Date(),
-      });
+      // console.log("userCredential = ", userCredential);
 
+      const cafeRef = doc(db, "cafes", userCredential.user.uid);
+
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(startDate.getDate() + 15); // 15 days trial
+
+      await setDoc(cafeRef, {
+        name: username || "My Cafe", // use entered name or default
+        email: email,
+        ownerId: userCredential.user.uid,
+        serviceType: "menu", // default service type
+        createdAt: serverTimestamp(),
+        trial: {
+          isActive: true,
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          expired: false,
+        },
+      });
+      toast.success("Signup successfull");
       // console.log("User created:", username);
     } catch (error) {
+      toast.error("Signup error");
       console.error("Signup error:", error.message);
     }
   }
@@ -63,9 +79,13 @@ export const AuthProvider = ({ children }) => {
         email,
         password
       );
+      toast.success("Signup successfull");
+
       // console.log("Logged in as:", userCredential);
       return userCredential.user;
     } catch (error) {
+      toast.error("Login error");
+
       console.error("Login error:", error.message);
     }
   }
