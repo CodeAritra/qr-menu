@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 import Navbar from "../../components/Navbar";
 import { Outlet, useParams } from "react-router-dom";
 import { useMenu } from "../../context/useMenu";
+import { useOrder } from "../../context/useOrder";
 
 export default function AdminDashboard() {
   /*async function migrateMenu(cafeId) {
@@ -54,7 +55,19 @@ export default function AdminDashboard() {
   const { cafeId } = useParams();
   const [orders, setOrders] = useState([]);
   const { cafe } = useMenu();
+  const { listenToOrders } = useOrder();
   const prevOrdersRef = useRef([]);
+
+  useEffect(() => {
+    if (!cafeId) return;
+
+    // 🔔 Start listening
+    const unsubscribe = listenToOrders(cafeId);
+
+    // Cleanup on unmount
+    return () => unsubscribe();
+  }, [cafeId]);
+
 
   /*// 🔊 function to play notification sound
   const playSound = () => {
@@ -91,31 +104,23 @@ export default function AdminDashboard() {
     return () => unsub();
   }, [cafeId, orders.length]);*/
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (!cafeId) return;
 
     const ordersRef = collection(db, "cafes", cafeId, "orders");
     const q = query(ordersRef, orderBy("createdAt", "asc"));
 
     const unsub = onSnapshot(q, (snap) => {
-      const newOrders = snap.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      snap.docChanges().forEach((change) => {
+        const order = { id: change.doc.id, ...change.doc.data() };
 
-      // detect newly added orders
-      if (newOrders.length > prevOrdersRef.current.length) {
-        const newOnes = newOrders.filter(
-          (o) => !prevOrdersRef.current.some((p) => p.id === o.id)
-        );
-
-        newOnes.forEach((order) => {
+        if (change.type === "added") {
+          // 🔔 First order created for this session
           toast.success(
             `🛎️ New Order from ${order.customerName || "Guest"} (Table ${
               order.tableNo || "-"
             })`
           );
-
           if (
             "Notification" in window &&
             Notification.permission === "granted"
@@ -124,21 +129,31 @@ export default function AdminDashboard() {
               body: `From ${order.customerName || "Guest"} (Table ${
                 order.tableNo || "-"
               })`,
-              icon: "/logo192.png", // optional icon (replace with your app logo)
+              icon: "/logo192.png",
             });
           }
+        }
 
-          // playSound();
-        });
-      }
+        if (change.type === "modified") {
+          // 🔔 Same session, but user added more items
+          toast.success(
+            `➕ Order updated for ${order.customerName || "Guest"} (Table ${
+              order.tableNo || "-"
+            })`
+          );
+        }
+      });
 
-      // update refs and state
-      prevOrdersRef.current = newOrders;
+      // update state
+      const newOrders = snap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setOrders(newOrders);
     });
 
     return () => unsub();
-  }, [cafeId]);
+  }, [cafeId]);*/
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {

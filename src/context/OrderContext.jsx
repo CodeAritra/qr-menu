@@ -78,6 +78,7 @@ export const OrderProvider = ({ children }) => {
 
       toast.success("Order updated!");
       return {
+        action: "modified",
         orderId: existingDoc.id,
         ...existingData,
         items: updatedItems,
@@ -97,7 +98,7 @@ export const OrderProvider = ({ children }) => {
 
       const docRef = await addDoc(ordersRef, orderDoc);
       toast.success(`Order placed!`);
-      return { orderId: docRef.id, ...orderDoc };
+      return { action: "added", orderId: docRef.id, ...orderDoc };
     }
   };
 
@@ -167,13 +168,56 @@ export const OrderProvider = ({ children }) => {
     });
   };
 
+  const listenToOrders = (cafeId) => {
+    const ordersRef = collection(db, "cafes", cafeId, "orders");
+
+    const q = query(
+      ordersRef,
+      where("status", "==", "pending") // only active orders
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        const order = change.doc.data();
+
+        if (change.type === "added") {
+          toast.success(
+            `🆕 New Order! Table ${order.tableNo} (${order.customerName})`
+          );
+          // playSound();
+        }
+
+        if (
+            "Notification" in window &&
+            Notification.permission === "granted"
+          ) {
+            new Notification("🛎️ New Order!", {
+              body: `From ${order.customerName || "Guest"} (Table ${
+                order.tableNo || "-"
+              })`,
+              icon: "/logo192.png",
+            });
+          }
+
+        if (change.type === "modified") {
+          toast(
+            `🔄 Order Updated! Table ${order.tableNo} (${order.customerName})`
+          );
+          // playSound();
+        }
+      });
+    });
+  };
+
   return (
     <OrderContext.Provider
       value={{
         listenOrders,
         updateOrderStatus,
         placeOrder,
-        completeOrder,listenOrderHistory
+        completeOrder,
+        listenOrderHistory,
+        listenToOrders,
       }}
     >
       {children}
