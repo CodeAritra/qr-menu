@@ -1,4 +1,4 @@
-import { createContext } from "react";
+import { createContext, useRef } from "react";
 import { db } from "../firebase";
 import {
   doc,
@@ -20,6 +20,8 @@ import { toast } from "react-hot-toast";
 const OrderContext = createContext();
 
 export const OrderProvider = ({ children }) => {
+  const prevOrdersRef = useRef([]);
+
   // get session id for each customer
   function getSessionId() {
     let sessionId = localStorage.getItem("sessionId");
@@ -102,19 +104,94 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
-  const listenOrders = (cafeId, callback) => {
-    const q = query(
-      collection(db, "cafes", cafeId, "orders"),
-      orderBy("createdAt", "desc")
-    );
+  const listenOrders = (cafeId, setOrders) => {
+    if (!cafeId) return;
 
-    return onSnapshot(q, (snapshot) => {
-      const orders = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      callback(orders);
+    const ordersRef = collection(db, "cafes", cafeId, "orders");
+    const q = query(ordersRef, orderBy("createdAt", "asc"));
+
+    const unsub = onSnapshot(q, (snap) => {
+      let updatedOrders = [...prevOrdersRef.current]; // start with previous state
+
+      snap.docChanges().forEach((change) => {
+        const order = { id: change.doc.id, ...change.doc.data() };
+
+        if (change.type === "added") {
+          // 🔔 New order created
+          order.items = order.items.map((item) => ({ ...item, isNew: true }));
+
+          toast.success(
+            `🛎️ New Order from ${order.customerName || "Guest"} (Table ${
+              order.tableNo || "-"
+            })`
+          );
+
+          if (
+            "Notification" in window &&
+            Notification.permission === "granted"
+          ) {
+            new Notification("🛎️ New Order!", {
+              body: `From ${order.customerName || "Guest"} (Table ${
+                order.tableNo || "-"
+              })`,
+              icon: "/logo192.png",
+            });
+          }
+
+          updatedOrders.push(order);
+        }
+
+        if (change.type === "modified") {
+          const oldOrder = prevOrdersRef.current.find((o) => o.id === order.id);
+          if (oldOrder) {
+            const oldItems = oldOrder.items || [];
+            const newItems = order.items || [];
+
+            const addedItems = newItems.filter(
+              (ni) => !oldItems.some((oi) => oi.name === ni.name)
+            );
+
+            if (addedItems.length > 0) {
+              // mark new items with isNew: true
+              order.items = newItems.map((item) =>
+                addedItems.some((ai) => ai.name === item.name)
+                  ? { ...item, isNew: true }
+                  : item
+              );
+
+              toast.success(
+                `➕ ${addedItems.length} new item(s) added to order (Table ${order.tableNo})`
+              );
+              if (
+                "Notification" in window &&
+                Notification.permission === "granted"
+              ) {
+                new Notification("➕ New items added!", {
+                  body: `${addedItems.length} item(s) added to order from ${
+                    order.customerName || "Guest"
+                  } (Table ${order.tableNo})`,
+                  icon: "/logo192.png",
+                });
+              }
+            }
+          }
+
+          // replace in updatedOrders
+          updatedOrders = updatedOrders.map((o) =>
+            o.id === order.id ? order : o
+          );
+        }
+
+        if (change.type === "removed") {
+          updatedOrders = updatedOrders.filter((o) => o.id !== order.id);
+        }
+      });
+
+      prevOrdersRef.current = updatedOrders;
+      setOrders(updatedOrders);
     });
+
+    return () => unsub();
   };
 
   const updateOrderStatus = async (cafeId, orderId, status) => {
@@ -168,47 +245,6 @@ export const OrderProvider = ({ children }) => {
     });
   };
 
-  const listenToOrders = (cafeId) => {
-    const ordersRef = collection(db, "cafes", cafeId, "orders");
-
-    const q = query(
-      ordersRef,
-      where("status", "==", "pending") // only active orders
-    );
-
-    return onSnapshot(q, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        const order = change.doc.data();
-
-        if (change.type === "added") {
-          toast.success(
-            `🆕 New Order! Table ${order.tableNo} (${order.customerName})`
-          );
-          // playSound();
-        }
-
-        if (
-            "Notification" in window &&
-            Notification.permission === "granted"
-          ) {
-            new Notification("🛎️ New Order!", {
-              body: `From ${order.customerName || "Guest"} (Table ${
-                order.tableNo || "-"
-              })`,
-              icon: "/logo192.png",
-            });
-          }
-
-        if (change.type === "modified") {
-          toast(
-            `🔄 Order Updated! Table ${order.tableNo} (${order.customerName})`
-          );
-          // playSound();
-        }
-      });
-    });
-  };
-
   return (
     <OrderContext.Provider
       value={{
@@ -217,7 +253,7 @@ export const OrderProvider = ({ children }) => {
         placeOrder,
         completeOrder,
         listenOrderHistory,
-        listenToOrders,
+        // notificationOrder,
       }}
     >
       {children}

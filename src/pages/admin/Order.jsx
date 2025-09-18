@@ -16,6 +16,21 @@ export default function Order() {
      console.log("orders = ", orders);
    }, [orders]);*/
 
+  // inside your Order.jsx
+  const handleItemClick = (orderId, itemName) => {
+    setOrders((prev) =>
+      prev.map((order) => {
+        if (order.id !== orderId) return order;
+
+        const updatedItems = order.items.map((item) =>
+          item.name === itemName ? { ...item, isNew: false } : item
+        );
+
+        return { ...order, items: updatedItems };
+      })
+    );
+  };
+
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6">📦 Orders Dashboard</h1>
@@ -70,10 +85,14 @@ export default function Order() {
                     <li
                       key={idx}
                       className="flex justify-between items-center p-2 bg-base-200 rounded-lg"
+                      onClick={() => handleItemClick(order.id, item.name)} // mark as seen
                     >
                       <span>
                         {item.qty || 1} × {item.name}
                       </span>
+                      {item.isNew && (
+                        <span className="badge badge-warning ml-2">NEW</span>
+                      )}
                       <span className="font-semibold">₹{item.price}</span>
                     </li>
                   ))}
@@ -102,7 +121,7 @@ export default function Order() {
                             completeOrder(cafeId, order.id, "cancelled")
                           }
                         >
-                          Cancel 
+                          Cancel
                         </button>
                       </div>
                     )}
