@@ -18,11 +18,11 @@ export default function ViewMenu() {
     fetchCafe(cafeId, cafeName);
   }, [fetchCafe, cafeId, cafeName]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     //   console.log("user == ", user);
     console.log("menu == ", menu);
     //   console.log("cafe == ", cafe);
-  }, [user, menu, cafe]);
+  }, [user, menu, cafe]);*/
 
   if (loading) return <div className="p-4 text-center">Loading menu...</div>;
 

@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { createContext, useCallback, useEffect, useState } from "react";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -9,8 +8,6 @@ import {
   updateDoc,
   setDoc,
   getDocs,
-  addDoc,
-  serverTimestamp,
   collection,
   query,
   orderBy,
@@ -66,12 +63,10 @@ export const MenuProvider = ({ children }) => {
     return () => unsubscribeMenu();
   }, [user]);
 
-  
-
   // 🔹 Customer-side: fetch menu using cafeId + cafeName
   // --- CRUD Methods (same as before) ---
 
-  const fetchCafe = useCallback(async (cafeId, cafeName) => {
+  const fetchCafe = useCallback(async (cafeId) => {
     try {
       const cafeRef = doc(db, "cafes", cafeId);
       const snap = await getDoc(cafeRef);
@@ -211,11 +206,6 @@ export const MenuProvider = ({ children }) => {
       toast.error("Failed to delete item");
     }
   };
-
-
-  
-
-  
 
   return (
     <MenuContext.Provider
