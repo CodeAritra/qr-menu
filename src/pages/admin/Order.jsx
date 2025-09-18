@@ -16,7 +16,6 @@ export default function Order() {
      console.log("orders = ", orders);
    }, [orders]);*/
 
-  // inside your Order.jsx
   const handleItemClick = (orderId, itemName) => {
     setOrders((prev) =>
       prev.map((order) => {

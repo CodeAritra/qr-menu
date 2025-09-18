@@ -194,10 +194,10 @@ export const OrderProvider = ({ children }) => {
     return () => unsub();
   };
 
-  const updateOrderStatus = async (cafeId, orderId, status) => {
+  /*const updateOrderStatus = async (cafeId, orderId, status) => {
     const orderRef = doc(db, "cafes", cafeId, "orders", orderId);
     await updateDoc(orderRef, { status, updatedAt: new Date().toISOString() });
-  };
+  };*/
 
   const completeOrder = async (cafeId, orderId, status) => {
     if (!["completed", "cancelled"].includes(status)) {
@@ -249,11 +249,10 @@ export const OrderProvider = ({ children }) => {
     <OrderContext.Provider
       value={{
         listenOrders,
-        updateOrderStatus,
+        // updateOrderStatus,
         placeOrder,
         completeOrder,
         listenOrderHistory,
-        // notificationOrder,
       }}
     >
       {children}
