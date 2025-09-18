@@ -219,7 +219,6 @@ export const MenuProvider = ({ children }) => {
         deleteItem,
         user,
         fetchCafe,
-        trial: cafe?.trial || null,
       }}
     >
       {children}

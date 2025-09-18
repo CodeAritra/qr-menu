@@ -1,9 +1,11 @@
 /* eslint-disable no-unused-vars */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   doc,
   onSnapshot,
   collection,
+  orderBy,
+  query,
   addDoc,
   getDoc,
   deleteField,
@@ -52,6 +54,7 @@ export default function AdminDashboard() {
   const { cafeId } = useParams();
   const [orders, setOrders] = useState([]);
   const { cafe } = useMenu();
+  const prevOrdersRef = useRef([]);
 
   /*// 🔊 function to play notification sound
   const playSound = () => {
@@ -87,6 +90,55 @@ export default function AdminDashboard() {
 
     return () => unsub();
   }, [cafeId, orders.length]);*/
+
+  useEffect(() => {
+    if (!cafeId) return;
+
+    const ordersRef = collection(db, "cafes", cafeId, "orders");
+    const q = query(ordersRef, orderBy("createdAt", "asc"));
+
+    const unsub = onSnapshot(q, (snap) => {
+      const newOrders = snap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      // detect newly added orders
+      if (newOrders.length > prevOrdersRef.current.length) {
+        const newOnes = newOrders.filter(
+          (o) => !prevOrdersRef.current.some((p) => p.id === o.id)
+        );
+
+        newOnes.forEach((order) => {
+          toast.success(
+            `🛎️ New Order from ${order.customerName || "Guest"} (Table ${
+              order.tableNo || "-"
+            })`
+          );
+
+          if (
+            "Notification" in window &&
+            Notification.permission === "granted"
+          ) {
+            new Notification("🛎️ New Order!", {
+              body: `From ${order.customerName || "Guest"} (Table ${
+                order.tableNo || "-"
+              })`,
+              icon: "/logo192.png", // optional icon (replace with your app logo)
+            });
+          }
+
+          // playSound();
+        });
+      }
+
+      // update refs and state
+      prevOrdersRef.current = newOrders;
+      setOrders(newOrders);
+    });
+
+    return () => unsub();
+  }, [cafeId]);
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
