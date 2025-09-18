@@ -1,6 +1,20 @@
 import { createContext } from "react";
 import { db } from "../firebase";
-import { doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
+import {
+  doc,
+  onSnapshot,
+  updateDoc,
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  orderBy,
+  where,
+  getDocs,
+  setDoc,
+  getDoc,
+  deleteDoc,
+} from "firebase/firestore";
 import { toast } from "react-hot-toast";
 
 const OrderContext = createContext();
@@ -16,219 +30,150 @@ export const OrderProvider = ({ children }) => {
     return sessionId;
   }
 
-  const placeOrder = async (
-    cafeId,
-    items,
-    fromCart = false,
-    customerName,
-    tableNo
-  ) => {
+  const placeOrder = async (cafeId, cart, customerName, tableNo) => {
+    if (!Array.isArray(cart) || cart.length === 0) {
+      throw new Error("No items to order");
+    }
+
     const sessionId = localStorage.getItem("sessionId") || getSessionId();
     localStorage.setItem("sessionId", sessionId);
 
-    const cafeRef = doc(db, "cafes", cafeId);
-    const cafeSnap = await getDoc(cafeRef);
+    const ordersRef = collection(db, "cafes", cafeId, "orders");
 
-    if (!cafeSnap.exists()) throw new Error("Cafe not found!");
-    const cafeData = cafeSnap.data();
-
-    let orders = cafeData.orders || [];
-
-    // check if session already has a pending order
-    let existingIndex = orders.findIndex(
-      (o) => o.sessionId === sessionId && o.status === "pending"
+    // 🔍 Step 1: Find existing pending order for this session & table
+    const q = query(
+      ordersRef,
+      where("sessionId", "==", sessionId),
+      where("tableNo", "==", tableNo),
+      where("status", "==", "pending")
     );
 
-    if (existingIndex > -1) {
-      // update existing
-      let existingOrder = orders[existingIndex];
-      let updatedItems = fromCart
-        ? [...existingOrder.items, ...items]
-        : [...existingOrder.items, items];
+    const snapshot = await getDocs(q);
 
-      orders[existingIndex] = {
-        ...existingOrder,
+    // Prepare new items
+    const newItems = cart.map((i) => ({
+      ...i,
+      price: Number(i.price),
+      qty: i.qty || 1,
+    }));
+
+    const additionalAmount = newItems.reduce(
+      (sum, i) => sum + i.price * (i.qty || 1),
+      0
+    );
+
+    if (!snapshot.empty) {
+      // 🔄 Step 2: Merge into existing order
+      const existingDoc = snapshot.docs[0];
+      const existingData = existingDoc.data();
+
+      const updatedItems = [...existingData.items, ...newItems];
+      const updatedTotal = (existingData.totalAmount || 0) + additionalAmount;
+
+      await updateDoc(existingDoc.ref, {
         items: updatedItems,
-        totalAmount: updatedItems.reduce(
-          (sum, i) => sum + i.price * (i.qty || 1),
-          0
-        ),
-        updatedAt: new Date().toISOString(),
+        totalAmount: updatedTotal,
+        updatedAt: serverTimestamp(),
+      });
+
+      toast.success("Order updated!");
+      return {
+        orderId: existingDoc.id,
+        ...existingData,
+        items: updatedItems,
+        totalAmount: updatedTotal,
       };
     } else {
-      // new order
-      const now = new Date();
-      const createdAt = now.toISOString(); // "2025-08-31T05:01:20.836Z"
-      const readableDate = now.toLocaleDateString(); // "31/08/2025"
-      const readableTime = now.toLocaleTimeString(); // "10:31 AM"
-
-      const newOrder = {
-        orderId: crypto.randomUUID(),
-        sessionId,
-        customerName,
-        tableNo,
+      // 🆕 Step 3: Create a new order
+      const orderDoc = {
+        items: newItems,
+        totalAmount: additionalAmount,
         status: "pending",
-        items: fromCart ? items : [items],
-        totalAmount: (fromCart ? items : [items]).reduce(
-          (sum, i) => sum + i.price * (i.qty || 1),
-          0
-        ),
-        createdAt: createdAt,
-        date: readableDate,
-        time: readableTime,
+        customerName: customerName || "Guest",
+        tableNo: tableNo || "-",
+        sessionId,
+        createdAt: serverTimestamp(),
       };
-      orders.push(newOrder);
-    }
 
-    await updateDoc(cafeRef, { orders });
+      const docRef = await addDoc(ordersRef, orderDoc);
+      toast.success(`Order placed!`);
+      return { orderId: docRef.id, ...orderDoc };
+    }
   };
 
-  /*const listenOrders = (cafeId, setOrders) => {
-    const cafeRef = doc(db, "cafes", cafeId);
-    return onSnapshot(cafeRef, (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        setOrders(data.orders || []); // active/pending orders
-        // completed/archived orders
-      } else {
-        setOrders([]);
-      }
-    });
-  };*/
+  const listenOrders = (cafeId, callback) => {
+    const q = query(
+      collection(db, "cafes", cafeId, "orders"),
+      orderBy("createdAt", "desc")
+    );
 
-  const listenOrders = (cafeId, setOrders) => {
-    const cafeRef = doc(db, "cafes", cafeId);
-
-    let prevIds = new Set();
-
-    // initialize prevIds once
-    (async () => {
-      const snap = await getDoc(cafeRef);
-      if (snap.exists()) {
-        const data = snap.data();
-        prevIds = new Set((data.orders || []).map((o) => o.orderId));
-      }
-    })();
-
-    return onSnapshot(cafeRef, (snap) => {
-      if (!snap.exists()) {
-        setOrders([]);
-        prevIds = new Set();
-        return;
-      }
-
-      const data = snap.data();
-      const orders = data.orders || [];
-      setOrders(orders);
-
-      // find new orders
-      const newOnes = orders.filter((o) => !prevIds.has(o.orderId));
-      if (newOnes.length > 0) {
-        newOnes.forEach((order) => {
-          // show toast
-          toast.success(
-            `New order from ${order.customerName || "Guest"} (Table ${
-              order.tableNo || "-"
-            })`
-          );
-
-          // play sound (place notification.mp3 inside /public)
-          try {
-            const audio = new Audio("/notification.mp3");
-            audio.play().catch(() => {});
-          } catch (e) {
-            console.error("Sound play error:", e);
-          }
-
-          // browser notification (optional)
-          if (
-            "Notification" in window &&
-            Notification.permission === "granted"
-          ) {
-            new Notification("🍔 New Order", {
-              body: `${order.customerName || "Guest"} • Table ${
-                order.tableNo || "-"
-              }`,
-            });
-          }
-        });
-      }
-
-      // update prevIds
-      prevIds = new Set(orders.map((o) => o.orderId));
+    return onSnapshot(q, (snapshot) => {
+      const orders = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      callback(orders);
     });
   };
 
   const updateOrderStatus = async (cafeId, orderId, status) => {
-    const cafeRef = doc(db, "cafes", cafeId);
-    const snap = await getDoc(cafeRef);
+    const orderRef = doc(db, "cafes", cafeId, "orders", orderId);
+    await updateDoc(orderRef, { status, updatedAt: new Date().toISOString() });
+  };
 
-    if (!snap.exists()) throw new Error("Cafe not found!");
-    const data = snap.data();
-
-    let orders = data.orders || [];
-    let orderHistory = data.orderHistory || [];
-
-    // Debug log all orderIds
-    /*console.log(
-      "Existing Orders:",
-      orders.map((o) => o.orderId)
-    );
-    console.log("Looking for:", orderId);*/
-
-    // Find the order
-    const orderIndex = orders.findIndex((o) => o.orderId === orderId);
-    if (orderIndex === -1) throw new Error("Order not found!");
-
-    let updatedOrder = {
-      ...orders[orderIndex],
-      status,
-      updatedAt: new Date().toISOString(),
-    };
-
-    if (status === "completed") {
-      // Move to history
-      orders.splice(orderIndex, 1);
-      orderHistory.push(updatedOrder);
-    } else {
-      // Just update inside orders[]
-      orders[orderIndex] = updatedOrder;
+  const completeOrder = async (cafeId, orderId, status) => {
+    if (!["completed", "cancelled"].includes(status)) {
+      throw new Error("Invalid status. Must be 'completed' or 'cancelled'.");
     }
 
-    await updateDoc(cafeRef, { orders, orderHistory });
+    const orderRef = doc(db, "cafes", cafeId, "orders", orderId);
+    const orderSnap = await getDoc(orderRef);
+
+    if (!orderSnap.exists()) throw new Error("Order not found!");
+
+    const orderData = orderSnap.data();
+
+    // Create history doc
+    const historyRef = doc(db, "cafes", cafeId, "orderHistory", orderId);
+    await setDoc(historyRef, {
+      ...orderData,
+      status,
+      updatedAt: serverTimestamp(),
+    });
+
+    // Delete from active orders
+    await deleteDoc(orderRef);
+
+    toast.success(`Order moved to history `);
   };
 
-  const completeOrder = async (cafeId, orderId) => {
-    const cafeRef = doc(db, "cafes", cafeId);
-    const cafeSnap = await getDoc(cafeRef);
-    if (!cafeSnap.exists()) throw new Error("Cafe not found!");
+  const listenOrderHistory = (cafeId, setHistory) => {
+    const historyRef = collection(db, "cafes", cafeId, "orderHistory");
 
-    let { orders = [], orderHistory = [] } = cafeSnap.data();
+    return onSnapshot(historyRef, (snap) => {
+      const history = snap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
-    const orderIndex = orders.findIndex((o) => o.orderId === orderId);
-    if (orderIndex === -1) throw new Error("Order not found!");
+      // sort: latest first
+      history.sort((a, b) => {
+        const t1 = a.updatedAt?.seconds || 0;
+        const t2 = b.updatedAt?.seconds || 0;
+        return t2 - t1;
+      });
 
-    const completedOrder = {
-      ...orders[orderIndex],
-      status: "completed",
-      updatedAt: new Date().toISOString(),
-    };
-
-    // remove from active orders
-    orders.splice(orderIndex, 1);
-
-    // add to history
-    orderHistory.push(completedOrder);
-
-    await updateDoc(cafeRef, { orders, orderHistory });
+      setHistory(history);
+    });
   };
+
   return (
     <OrderContext.Provider
       value={{
         listenOrders,
         updateOrderStatus,
         placeOrder,
-        completeOrder,
+        completeOrder,listenOrderHistory
       }}
     >
       {children}

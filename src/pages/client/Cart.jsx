@@ -31,9 +31,9 @@ export default function Cart() {
     setLoading(true);
 
     try {
-      await placeOrder(cafeId, cart, true, customerName, tableNo);
+      await placeOrder(cafeId, cart, customerName, tableNo);
 
-      toast.success("Order placed!");
+      // toast.success("Order placed!");
       clearCart();
       localStorage.removeItem("cart");
       navigate(`/${cafeName}/${cafeId}`);

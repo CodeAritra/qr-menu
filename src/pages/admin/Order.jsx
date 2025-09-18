@@ -5,16 +5,16 @@ import { useParams } from "react-router-dom";
 export default function Order() {
   const { cafeId } = useParams();
   const [orders, setOrders] = useState([]);
-  const { listenOrders, updateOrderStatus } = useOrder();
+  const { listenOrders, completeOrder } = useOrder();
 
   useEffect(() => {
     const unsub = listenOrders(cafeId, setOrders);
     return () => unsub();
   }, [cafeId, listenOrders]);
 
-  // useEffect(() => {
-  //   console.log("orders = ", orders);
-  // }, [orders]);
+  /*useEffect(() => {
+     console.log("orders = ", orders);
+   }, [orders]);*/
 
   return (
     <div className="p-6">
@@ -28,7 +28,7 @@ export default function Order() {
         <div className="grid gap-6">
           {orders.map((order) => (
             <div
-              key={order.orderId}
+              key={order.id}
               className="card bg-base-100 shadow-xl border border-base-300"
             >
               <div className="card-body">
@@ -42,10 +42,14 @@ export default function Order() {
                     </h2>
                     <h2 className="card-title">
                       🧾 Order at -{" "}
-                      {new Date(order.createdAt).toLocaleString("en-IN", {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                      })}
+                      {order.createdAt
+                        ? new Date(
+                            order.createdAt.seconds * 1000
+                          ).toLocaleString("en-IN", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })
+                        : "N/A"}
                     </h2>
                   </div>
 
@@ -83,14 +87,24 @@ export default function Order() {
 
                   <div className="join">
                     {order.status === "pending" && (
-                      <button
-                        className="btn btn-sm btn-info join-item"
-                        onClick={() =>
-                          updateOrderStatus(cafeId, order.orderId, "completed")
-                        }
-                      >
-                        Mark Completed
-                      </button>
+                      <div className="">
+                        <button
+                          className="btn btn-sm btn-info join-item mr-2"
+                          onClick={() =>
+                            completeOrder(cafeId, order.id, "completed")
+                          }
+                        >
+                          Mark Completed
+                        </button>
+                        <button
+                          className="btn btn-sm btn-error join-item"
+                          onClick={() =>
+                            completeOrder(cafeId, order.id, "cancelled")
+                          }
+                        >
+                          Cancel 
+                        </button>
+                      </div>
                     )}
                     {order.status === "completed" && (
                       <button
