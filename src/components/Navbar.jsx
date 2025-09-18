@@ -13,7 +13,7 @@ export default function Navbar({ categories, onSearch, onFilter }) {
   const { user, cafe } = useMenu();
   const {logout} = useAuth()
 
-  // console.log("user nav == ", cafe);
+  //  console.log("user nav == ", cafe);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -47,7 +47,7 @@ export default function Navbar({ categories, onSearch, onFilter }) {
               <ul className="menu menu-horizontal  ">
                 <li>
                   <Link
-                    to={`/admin/${user.username}/${user.uid}`}
+                    to={`/admin/${cafe?.name}/${cafe?.ownerId}`}
                     className="btn btn-ghost btn-primary"
                   >
                     Dashboard
