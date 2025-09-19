@@ -14,7 +14,6 @@ export default function Login() {
       e.preventDefault();
       const user = await login(username, password);
       navigate(`/admin/${username}/${user.uid}`);
-     
     } catch (error) {
       console.log(error);
     }

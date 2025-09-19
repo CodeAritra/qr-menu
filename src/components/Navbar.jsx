@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -10,10 +10,14 @@ export default function Navbar({ categories, onSearch, onFilter }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
 
-  const { user, cafe } = useMenu();
-  const {logout} = useAuth()
+  const [user, setuser] = useState(
+    JSON.parse(localStorage.getItem("user")) || null
+  );
 
-  //  console.log("user nav == ", cafe);
+  const { cafe } = useMenu();
+  const { logout } = useAuth();
+
+  console.log("user nav == ", user);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -46,30 +50,62 @@ export default function Navbar({ categories, onSearch, onFilter }) {
             <div className="navbar-center hidden md:flex">
               <ul className="menu menu-horizontal  ">
                 <li>
-                  <Link
-                    to={`/admin/${cafe?.name}/${cafe?.ownerId}`}
-                    className="btn btn-ghost btn-primary"
+                  <NavLink
+                    to={`/admin/${user?.username}/${user?.uid}`}
+                    end
+                    // className="btn btn-active btn-ghost btn-primary"
+                    className={({ isActive }) =>
+                      `btn ${
+                        isActive
+                          ? "btn-ghost btn-primary btn-active"
+                          : "btn-ghost"
+                      }`
+                    }
                   >
                     Dashboard
-                  </Link>
+                  </NavLink>
                 </li>
                 <li>
-                  <Link to="create" className="btn btn-ghost btn-primary">
+                  <NavLink
+                    to="create"
+                    className={({ isActive }) =>
+                      `btn ${
+                        isActive
+                          ? "btn-ghost btn-primary btn-active"
+                          : "btn-ghost"
+                      }`
+                    }
+                  >
                     Create Menu
-                  </Link>
+                  </NavLink>
                 </li>
                 <li>
-                  <Link to="order" className="btn btn-ghost btn-primary">
+                  <NavLink
+                    to="order"
+                    className={({ isActive }) =>
+                      `btn ${
+                        isActive
+                          ? "btn-ghost btn-primary btn-active"
+                          : "btn-ghost"
+                      }`
+                    }
+                  >
                     Orders
-                  </Link>
+                  </NavLink>
                 </li>
                 <li>
-                  <Link
+                  <NavLink
                     to="order-history"
-                    className="btn btn-ghost btn-primary"
+                    className={({ isActive }) =>
+                      `btn ${
+                        isActive
+                          ? "btn-ghost btn-primary btn-active"
+                          : "btn-ghost"
+                      }`
+                    }
                   >
                     History
-                  </Link>
+                  </NavLink>
                 </li>
               </ul>
             </div>
@@ -78,7 +114,7 @@ export default function Navbar({ categories, onSearch, onFilter }) {
               <div
                 tabIndex={0}
                 role="button"
-                className="btn btn-ghost btn-circle"
+                className="btn btn-ghost btn-primary btn-circle"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -100,16 +136,30 @@ export default function Navbar({ categories, onSearch, onFilter }) {
                 className="menu menu-lg dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow "
               >
                 <li>
-                  <Link to="">Dashboard</Link>
+                  <Link
+                    className="btn btn-ghost btn-primary"
+                    to=""
+                  >
+                    Dashboard
+                  </Link>
                 </li>
                 <li>
-                  <Link to="create">Create Menu</Link>
+                  <Link className="btn btn-ghost btn-primary" to="create">
+                    Create Menu
+                  </Link>
                 </li>
                 <li>
-                  <Link to="order">Orders</Link>
+                  <Link className="btn btn-ghost btn-primary" to="order">
+                    Orders
+                  </Link>
                 </li>
                 <li>
-                  <Link to="order-history">History</Link>
+                  <Link
+                    className="btn btn-ghost btn-primary"
+                    to="order-history"
+                  >
+                    History
+                  </Link>
                 </li>
               </ul>
             </div>
