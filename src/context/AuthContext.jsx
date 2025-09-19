@@ -74,7 +74,10 @@ export const AuthProvider = ({ children }) => {
         email,
         password
       );
-      localStorage.setItem("user", JSON.stringify({ username, uid: user.uid }));
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ username, uid: userCredential.user.uid })
+      );
       toast.success("Login successfull");
 
       // console.log("Logged in as:", userCredential);

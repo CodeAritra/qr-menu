@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 export default function Login() {
   const { login } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -28,19 +31,35 @@ export default function Login() {
             <input
               type="text"
               placeholder="Username"
-              className="input input-bordered w-full"
+              className="input input-ghost w-full border border-black"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
             />
-            <input
+            <div className="flex w-full border border-black overflow-hidden input input-ghost">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                className="w-full border-none rounded-none"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <span
+                className="flex items-center justify-center px-3 cursor-pointer select-none "
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </span>
+            </div>
+            {/* <input
               type="password"
               placeholder="Password"
               className="input input-bordered w-full"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-            />
+            /> */}
             <button type="submit" className="btn btn-primary w-full">
               Login
             </button>
