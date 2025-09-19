@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("user", JSON.stringify({ username, uid: user.uid }));
       toast.success("Login successfull");
 
-      console.log("Logged in as:", userCredential);
+      // console.log("Logged in as:", userCredential);
       return userCredential.user;
     } catch (error) {
       toast.error("Login error");
@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await signOut(auth);
       localStorage.removeItem("user");
-      console.log("User logged out successfully");
+      // console.log("User logged out successfully");
     } catch (error) {
       console.error("Logout error:", error.message);
     }

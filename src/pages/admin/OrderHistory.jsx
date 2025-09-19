@@ -19,13 +19,17 @@ export default function OrderHistory() {
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">📜 Order History</h2>
+      <h2 className="text-lg sm:text-xl font-bold mb-4 text-center sm:text-left">
+        Order History
+      </h2>
 
       {history.length === 0 ? (
-        <div className="text-gray-500">No past history yet.</div>
+        <div className="text-gray-500 text-center sm:text-left">
+          No past history yet.
+        </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="table table-zebra w-full">
+          <table className="table table-zebra w-full text-sm sm:text-base">
             {/* head */}
             <thead>
               <tr>
@@ -41,19 +45,23 @@ export default function OrderHistory() {
             <tbody>
               {history.map((order) => (
                 <tr key={order.id}>
-                  <td>{order.customerName || "Guest"}</td>
-                  <td>{order.tableNo || "-"}</td>
+                  <td className="whitespace-nowrap">
+                    {order.customerName || "Guest"}
+                  </td>
+                  <td className="whitespace-nowrap">{order.tableNo || "-"}</td>
                   <td>
-                    <ul className="list-disc list-inside text-sm">
+                    <ul className="list-disc list-inside text-xs sm:text-sm">
                       {order.items.map((i, idx) => (
-                        <li key={idx}>
+                        <li key={idx} className="whitespace-nowrap">
                           {i.name} × {i.qty || 1} = ₹{i.price * (i.qty || 1)}
                         </li>
                       ))}
                     </ul>
                   </td>
-                  <td className="font-bold">₹{order.totalAmount}</td>
-                  <td>
+                  <td className="font-bold whitespace-nowrap">
+                    ₹{order.totalAmount}
+                  </td>
+                  <td className="whitespace-nowrap">
                     {new Date(order.createdAt.seconds * 1000).toLocaleString(
                       "en-IN",
                       {
@@ -62,7 +70,7 @@ export default function OrderHistory() {
                       }
                     )}
                   </td>
-                  <td>
+                  <td className="whitespace-nowrap">
                     {new Date(order.updatedAt.seconds * 1000).toLocaleString(
                       "en-IN",
                       {
@@ -71,7 +79,19 @@ export default function OrderHistory() {
                       }
                     )}
                   </td>
-                  <td>{order.status}</td>
+                  <td>
+                    <span
+                      className={`badge ${
+                        order.status === "completed"
+                          ? "badge-success"
+                          : order.status === "cancelled"
+                          ? "badge-error"
+                          : "badge-warning"
+                      }`}
+                    >
+                      {order.status}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>

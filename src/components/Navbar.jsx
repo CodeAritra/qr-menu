@@ -13,7 +13,7 @@ export default function Navbar({ categories, onSearch, onFilter }) {
   const [open, setOpen] = useState(false);
   const closeMenu = () => setOpen(false);
 
-  console.log("open == ", open);
+  // console.log("open == ", open);
 
   const [user, setuser] = useState(
     JSON.parse(localStorage.getItem("user")) || null

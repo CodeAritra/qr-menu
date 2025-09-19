@@ -31,30 +31,33 @@ export default function Order() {
   };*/
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">📦 Orders Dashboard</h1>
+    <div className="p-4 sm:p-6">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center sm:text-left">
+        Orders Dashboard
+      </h1>
 
       {orders.length === 0 ? (
         <div className="alert shadow-lg bg-base-200">
           <span>No orders yet...</span>
         </div>
       ) : (
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {orders.map((order) => (
             <div
               key={order.id}
               className="card bg-base-100 shadow-xl border border-base-300"
             >
               <div className="card-body">
-                <div className="flex justify-between items-center">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
                   <div>
-                    <h2 className="card-title">
+                    <h2 className="card-title text-base sm:text-lg">
                       🧾 Name - {order.customerName}
                     </h2>
-                    <h2 className="card-title">
+                    <h2 className="card-title text-base sm:text-lg">
                       🧾 Table no - {order.tableNo}
                     </h2>
-                    <h2 className="card-title">
+                    <h2 className="card-title text-sm sm:text-base">
                       🧾 Order at -{" "}
                       {order.createdAt
                         ? new Date(
@@ -68,7 +71,7 @@ export default function Order() {
                   </div>
 
                   <span
-                    className={`badge ${
+                    className={`badge self-start sm:self-auto ${
                       order.status === "pending"
                         ? "badge-warning"
                         : "badge-success"
@@ -83,10 +86,8 @@ export default function Order() {
                   {order.items.map((item, idx) => (
                     <li
                       key={idx}
-                      className="flex justify-between items-center p-2 bg-base-200 rounded-lg"
-                      onClick={() =>
-                        dismissBadge(cafeId, order.id, item.name)
-                      } // mark as seen
+                      className="flex justify-between items-center p-2 bg-base-200 rounded-lg text-sm sm:text-base"
+                      onClick={() => dismissBadge(cafeId, order.id, item.name)} // mark as seen
                     >
                       <span>
                         {item.qty || 1} × {item.name}
@@ -100,16 +101,16 @@ export default function Order() {
                 </ul>
 
                 {/* Footer */}
-                <div className="flex justify-between items-center mt-4">
-                  <p className="font-bold text-lg">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center mt-4 gap-2">
+                  <p className="font-bold text-base sm:text-lg">
                     💰 Total: ₹{order.totalAmount}
                   </p>
 
-                  <div className="join">
+                  <div className="join flex flex-wrap gap-2">
                     {order.status === "pending" && (
-                      <div className="">
+                      <>
                         <button
-                          className="btn btn-sm btn-info join-item mr-2"
+                          className="btn btn-sm btn-info join-item"
                           onClick={() =>
                             completeOrder(cafeId, order.id, "completed")
                           }
@@ -124,7 +125,7 @@ export default function Order() {
                         >
                           Cancel
                         </button>
-                      </div>
+                      </>
                     )}
                     {order.status === "completed" && (
                       <button
