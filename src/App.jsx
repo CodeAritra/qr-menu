@@ -12,6 +12,7 @@ import Cart from "./pages/client/Cart";
 import OrderHistory from "./pages/admin/OrderHistory";
 import CafeQRCode from "./components/CafeQRCode";
 import { useAuth } from "./context/useAuth";
+import NotFound from "./pages/NotFound";
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -56,6 +57,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/qr" element={<CafeQRCode />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
       {/* <HomePage /> */}
