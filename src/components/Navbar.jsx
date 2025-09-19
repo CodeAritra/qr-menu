@@ -10,6 +10,11 @@ export default function Navbar({ categories, onSearch, onFilter }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
 
+  const [open, setOpen] = useState(false);
+  const closeMenu = () => setOpen(false);
+
+  console.log("open == ", open);
+
   const [user, setuser] = useState(
     JSON.parse(localStorage.getItem("user")) || null
   );
@@ -17,7 +22,7 @@ export default function Navbar({ categories, onSearch, onFilter }) {
   const { cafe } = useMenu();
   const { logout } = useAuth();
 
-  console.log("user nav == ", user);
+  // console.log("user nav == ", user);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -110,11 +115,16 @@ export default function Navbar({ categories, onSearch, onFilter }) {
               </ul>
             </div>
 
-            <div className="dropdown md:hidden px-1">
+            <div
+              className={`dropdown md:hidden px-1 ${
+                open ? "dropdown-open" : ""
+              }`}
+            >
+              {/* Toggle button */}
               <div
-                tabIndex={0}
                 role="button"
                 className="btn btn-ghost btn-primary btn-circle"
+                onClick={() => setOpen(!open)}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -128,28 +138,36 @@ export default function Navbar({ categories, onSearch, onFilter }) {
                     strokeLinejoin="round"
                     strokeWidth="2"
                     d="M4 6h16M4 12h16M4 18h7"
-                  />{" "}
+                  />
                 </svg>
               </div>
-              <ul
-                tabIndex={0}
-                className="menu menu-lg dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow "
-              >
+
+              {/* Menu */}
+              {open && (<ul className="menu menu-lg dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow">
                 <li>
                   <Link
                     className="btn btn-ghost btn-primary"
                     to=""
+                    onClick={closeMenu}
                   >
                     Dashboard
                   </Link>
                 </li>
                 <li>
-                  <Link className="btn btn-ghost btn-primary" to="create">
+                  <Link
+                    className="btn btn-ghost btn-primary"
+                    to="create"
+                    onClick={closeMenu}
+                  >
                     Create Menu
                   </Link>
                 </li>
                 <li>
-                  <Link className="btn btn-ghost btn-primary" to="order">
+                  <Link
+                    className="btn btn-ghost btn-primary"
+                    to="order"
+                    onClick={closeMenu}
+                  >
                     Orders
                   </Link>
                 </li>
@@ -157,11 +175,13 @@ export default function Navbar({ categories, onSearch, onFilter }) {
                   <Link
                     className="btn btn-ghost btn-primary"
                     to="order-history"
+                    onClick={closeMenu}
                   >
                     History
                   </Link>
                 </li>
-              </ul>
+              </ul>)}
+              
             </div>
           </div>
           <div className=" text-lg font-bold">Admin Panel</div>
