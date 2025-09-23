@@ -114,11 +114,12 @@ export const OrderProvider = ({ children }) => {
         const order = { id: change.doc.id, ...change.doc.data() };
 
         if (change.type === "added") {
-          if (!prevOrdersRef.current.some((o) => o.id === order.id)) {
+          // only add if it doesn't exist already
+          if (!updatedOrders.some((o) => o.id === order.id)) {
             order.items = order.items.map((item) => ({ ...item, isNew: true }));
+            updatedOrders.push(order);
+            notify(order);
           }
-          updatedOrders.push(order); // ✅ Add new order
-          notify(order);
         }
 
         if (change.type === "modified") {

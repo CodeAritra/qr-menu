@@ -3,8 +3,8 @@ import { QRCodeCanvas } from "qrcode.react";
 import jsPDF from "jspdf";
 
 export default function CafeQRCode() {
-  const cafeName = "aritra";
-  const cafeId = "YefNZlosfzWnsZOhqCQP5OGbGm33";
+  const cafeName = "debolina";
+  const cafeId = "8LLZJ1ls0fhHugZFNtRFGta2PmR2";
   const tableCount = 5; // number of tables in the cafe
 
   const qrRefs = Array.from({ length: tableCount }, () => useRef(null));
