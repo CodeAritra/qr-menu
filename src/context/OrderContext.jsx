@@ -146,15 +146,26 @@ export const OrderProvider = ({ children }) => {
       });
 
       function notify(order, isUpdated = false) {
-        toast.success(
-          isUpdated
-            ? `➕ New item(s) added to order (Table ${order.tableNo})`
-            : `🛎️ New Order from ${order.customerName || "Guest"} (Table ${
-                order.tableNo
-              })`
+        const message = isUpdated
+          ? `➕ New item(s) added to order (Table ${order.tableNo})`
+          : `🛎️ New Order from ${order.customerName || "Guest"} (Table ${
+              order.tableNo
+            })`;
+
+        // Always show toast
+        toast.success(message);
+
+        // Detect mobile/tablet
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(
+          navigator.userAgent
         );
 
-        if ("Notification" in window && Notification.permission === "granted") {
+        // Show browser notification only on desktop
+        if (
+          !isMobile &&
+          "Notification" in window &&
+          Notification.permission === "granted"
+        ) {
           new Notification(isUpdated ? "➕ New Items!" : "🛎️ New Order!", {
             body: `From ${order.customerName || "Guest"} (Table ${
               order.tableNo
