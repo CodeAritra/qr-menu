@@ -1,12 +1,13 @@
+/* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
-import { useState } from "react";
+import { Children, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useMenu } from "../context/useMenu";
 import { useAuth } from "../context/useAuth";
 
-export default function Navbar({ categories, onSearch, onFilter }) {
+export default function Navbar({ children }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
 
@@ -47,23 +48,21 @@ export default function Navbar({ categories, onSearch, onFilter }) {
   };
 
   return (
-    <div className="navbar bg-white shadow-md text-gray-600 justify-between">
-      {/* admin side */}
+    <>
+      {/* Admin Navbar */}
       {user && (
-        <>
-          <div>
-            <div className="navbar-center hidden md:flex">
-              <ul className="menu menu-horizontal  ">
+        <div className="navbar bg-base-100 shadow-md sticky top-0 z-20 px-4">
+          {/* Left Section */}
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex">
+              <ul className="menu menu-horizontal gap-1">
                 <li>
                   <NavLink
                     to={`/admin/${user?.username}/${user?.uid}`}
                     end
-                    // className="btn btn-active btn-ghost btn-primary"
                     className={({ isActive }) =>
-                      `btn ${
-                        isActive
-                          ? "btn-ghost btn-primary btn-active"
-                          : "btn-ghost"
+                      `btn btn-sm rounded-lg ${
+                        isActive ? "btn-primary text-white" : "btn-ghost"
                       }`
                     }
                   >
@@ -74,10 +73,8 @@ export default function Navbar({ categories, onSearch, onFilter }) {
                   <NavLink
                     to="create"
                     className={({ isActive }) =>
-                      `btn ${
-                        isActive
-                          ? "btn-ghost btn-primary btn-active"
-                          : "btn-ghost"
+                      `btn btn-sm rounded-lg ${
+                        isActive ? "btn-primary text-white" : "btn-ghost"
                       }`
                     }
                   >
@@ -88,10 +85,8 @@ export default function Navbar({ categories, onSearch, onFilter }) {
                   <NavLink
                     to="order"
                     className={({ isActive }) =>
-                      `btn ${
-                        isActive
-                          ? "btn-ghost btn-primary btn-active"
-                          : "btn-ghost"
+                      `btn btn-sm rounded-lg ${
+                        isActive ? "btn-primary text-white" : "btn-ghost"
                       }`
                     }
                   >
@@ -102,10 +97,8 @@ export default function Navbar({ categories, onSearch, onFilter }) {
                   <NavLink
                     to="order-history"
                     className={({ isActive }) =>
-                      `btn ${
-                        isActive
-                          ? "btn-ghost btn-primary btn-active"
-                          : "btn-ghost"
+                      `btn btn-sm rounded-lg ${
+                        isActive ? "btn-primary text-white" : "btn-ghost"
                       }`
                     }
                   >
@@ -115,20 +108,12 @@ export default function Navbar({ categories, onSearch, onFilter }) {
               </ul>
             </div>
 
-            <div
-              className={`dropdown md:hidden px-1 ${
-                open ? "dropdown-open" : ""
-              }`}
-            >
-              {/* Toggle button */}
-              <div
-                role="button"
-                className="btn btn-ghost btn-primary btn-circle"
-                onClick={() => setOpen(!open)}
-              >
+            {/* Mobile Dropdown */}
+            <div className="dropdown md:hidden">
+              <label tabIndex={0} className="btn btn-ghost btn-circle">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
+                  className="h-6 w-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -140,123 +125,62 @@ export default function Navbar({ categories, onSearch, onFilter }) {
                     d="M4 6h16M4 12h16M4 18h7"
                   />
                 </svg>
-              </div>
-
-              {/* Menu */}
-              {open && (<ul className="menu menu-lg dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow">
-                <li>
-                  <Link
-                    className="btn btn-ghost btn-primary"
-                    to=""
-                    onClick={closeMenu}
-                  >
-                    Dashboard
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    className="btn btn-ghost btn-primary"
-                    to="create"
-                    onClick={closeMenu}
-                  >
-                    Create Menu
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    className="btn btn-ghost btn-primary"
-                    to="order"
-                    onClick={closeMenu}
-                  >
-                    Orders
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    className="btn btn-ghost btn-primary"
-                    to="order-history"
-                    onClick={closeMenu}
-                  >
-                    History
-                  </Link>
-                </li>
-              </ul>)}
-              
+              </label>
+              <ul
+                tabIndex={0}
+                className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
+              >
+                <li><NavLink to="">Dashboard</NavLink></li>
+                <li><NavLink to="create">Create Menu</NavLink></li>
+                <li><NavLink to="order">Orders</NavLink></li>
+                <li><NavLink to="order-history">History</NavLink></li>
+              </ul>
             </div>
           </div>
-          <div className=" text-lg font-bold">Admin Panel</div>
-          <div className="px-2 md:px-7">
+
+          {/* Center */}
+          <div className="text-lg font-bold badge badge-primary py-3 px-4">
+            Admin Panel
+          </div>
+
+          {/* Right Section */}
+          <div>
             <button
-              className="btn btn-outline btn-error "
+              className="btn btn-outline btn-error btn-sm"
               onClick={handleLogout}
             >
               Logout
             </button>
           </div>
-        </>
+        </div>
       )}
 
-      {/* client side */}
+      {/* Client Navbar */}
       {!user && (
-        <>
-          <div className="flex-1">
-            <a
-              className="text-2xl font-bold text-primary"
-              onClick={() => navigate("")}
-            >
-              {cafe?.name}
-            </a>
+        <div className="sticky top-0 z-20 bg-base-100 shadow-md">
+          {/* Cafe Header (scrolls away if needed) */}
+          <header className="flex items-center gap-2 p-2">
+            <img
+              src="/logo192.png"
+              alt="Cafe Logo"
+              className="w-10 h-10 rounded-full shadow"
+            />
+            <h1 className="font-bold text-lg">{cafe?.name || "Cafe"}</h1>
+          </header>
+
+          {/* Search + Filter (sticks below header) */}
+          <div className="flex gap-2 p-2 bg-base-100 sticky top-0 z-30">
+            <input
+              type="text"
+              placeholder="Search item..."
+              className="input input-bordered flex-1 rounded-full"
+            />
+            <button className="btn btn-outline btn-primary rounded-full">
+              Filters
+            </button>
           </div>
-
-          <div className="flex items-center">
-            {/* Search */}
-            {/*<label className="input">
-              <svg
-                className="h-5 w-5 opacity-50"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                fill="none"
-                strokeWidth="2"
-              >
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-              <input
-                type="text"
-                placeholder="Search food..."
-                className="input input-bordered"
-                value={searchTerm}
-                onChange={handleSearchChange}
-              />
-            </label>*/}
-
-            {/* Category Filter */}
-            {/* <select
-              className="select select-bordered"
-              value={selectedCategory}
-              onChange={handleCategoryChange}
-            >
-              <option value="">All Categories</option>
-              {categories.map((cat, idx) => (
-                <option key={idx} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select> */}
-
-            {/* Shopping Cart */}
-            {cafe?.serviceType == "order" && (
-              <button className="btn btn-ghost btn-square">
-                <ShoppingCart
-                  className="h-6 w-6 text-primary"
-                  onClick={() => navigate("cart")}
-                />
-              </button>
-            )}
-          </div>
-        </>
+        </div>
       )}
-    </div>
+    </>
   );
 }

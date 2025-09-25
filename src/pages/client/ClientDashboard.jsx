@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import ViewMenu from "../ViewMenu";
 import { useMenu } from "../../context/useMenu";
@@ -9,8 +9,12 @@ import { useEffect, useState } from "react";
 export default function ClientDashboard() {
   const { trial, cafe } = useMenu();
   const [tableNo, setTableNo] = useState();
+  const [user, setuser] = useState(
+    JSON.parse(localStorage.getItem("user")) || null
+  );
 
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const tableParam = searchParams.get("table");
@@ -22,7 +26,7 @@ export default function ClientDashboard() {
 
   // useEffect(()=>{
   //   console.log("table no = ",tableNo);
-    
+
   // },[tableNo])
 
   if (trial?.expired) {
@@ -37,9 +41,29 @@ export default function ClientDashboard() {
   }
   return (
     <>
-      <div className="flex-1 flex flex-col overflow-y-auto">
+      <div className="flex flex-col h-screen overflow-y-auto ">
         <Navbar />
         <Outlet />
+
+        {/* Bottom Navbar */}
+        {!user && (
+          <nav className="btm-nav bg-base-100 shadow-md sticky bottom-0  flex justify-evenly p-4">
+            <button
+              className="flex flex-col items-center justify-center"
+              onClick={() => navigate("")}
+            >
+              <span className="text-xl">🍴</span>
+              <span className="text-xs">Menu</span>
+            </button>
+            <button
+              className="flex flex-col items-center justify-center"
+              onClick={() => navigate("cart")}
+            >
+              <span className="text-xl">🛒</span>
+              <span className="text-xs">Cart</span>
+            </button>
+          </nav>
+        )}
       </div>
     </>
   );
