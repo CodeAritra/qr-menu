@@ -130,10 +130,18 @@ export default function Navbar({ children }) {
                 tabIndex={0}
                 className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
               >
-                <li><NavLink to="">Dashboard</NavLink></li>
-                <li><NavLink to="create">Create Menu</NavLink></li>
-                <li><NavLink to="order">Orders</NavLink></li>
-                <li><NavLink to="order-history">History</NavLink></li>
+                <li>
+                  <NavLink to="">Dashboard</NavLink>
+                </li>
+                <li>
+                  <NavLink to="create">Create Menu</NavLink>
+                </li>
+                <li>
+                  <NavLink to="order">Orders</NavLink>
+                </li>
+                <li>
+                  <NavLink to="order-history">History</NavLink>
+                </li>
               </ul>
             </div>
           </div>
@@ -165,19 +173,29 @@ export default function Navbar({ children }) {
               alt="Cafe Logo"
               className="w-10 h-10 rounded-full shadow"
             />
-            <h1 className="font-bold text-lg">{cafe?.name || "Cafe"}</h1>
+            <h1 className="font-bold text-lg text-primary">{cafe?.name || "Cafe"}</h1>
           </header>
 
           {/* Search + Filter (sticks below header) */}
-          <div className="flex gap-2 p-2 bg-base-100 sticky top-0 z-30">
-            <input
-              type="text"
-              placeholder="Search item..."
-              className="input input-bordered flex-1 rounded-full"
-            />
-            <button className="btn btn-outline btn-primary rounded-full">
-              Filters
-            </button>
+          <div className="flex gap-2 p-2 bg-base-100 sticky top-0 z-30 input input-primary flex-1 rounded-md m-5">
+            <svg
+              className="h-[1em] opacity-50"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+            >
+              <g
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                strokeWidth="2.5"
+                fill="none"
+                stroke="currentColor"
+              >
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.3-4.3"></path>
+              </g>
+            </svg>
+
+            <input type="search" placeholder="Search item..." className="" />
           </div>
         </div>
       )}

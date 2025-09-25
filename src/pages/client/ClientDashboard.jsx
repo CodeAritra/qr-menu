@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate,useLocation, useParams } from "react-router-dom";
 import Navbar from "../../components/Navbar";
 import ViewMenu from "../ViewMenu";
 import { useMenu } from "../../context/useMenu";
@@ -15,6 +15,8 @@ export default function ClientDashboard() {
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const {cafeId} = useParams()
 
   useEffect(() => {
     const tableParam = searchParams.get("table");
@@ -47,16 +49,24 @@ export default function ClientDashboard() {
 
         {/* Bottom Navbar */}
         {!user && (
-          <nav className="btm-nav bg-base-100 shadow-md sticky bottom-0  flex justify-evenly p-4">
+          <nav className="btm-nav bg-base-100 shadow-md sticky bottom-0 flex justify-evenly p-4">
             <button
-              className="flex flex-col items-center justify-center"
+              className={`flex flex-col items-center justify-center rounded-md px-2 ${
+                location.pathname.endsWith(cafeId)
+                  ? "bg-purple-100 text-primary font-semibold"
+                  : ""
+              }`}
               onClick={() => navigate("")}
             >
               <span className="text-xl">🍴</span>
               <span className="text-xs">Menu</span>
             </button>
             <button
-              className="flex flex-col items-center justify-center"
+              className={`flex flex-col items-center justify-center  rounded-md px-2  ${
+                location.pathname.includes("cart")
+                  ? "text-primary bg-purple-100  font-semibold"
+                  : ""
+              }`}
               onClick={() => navigate("cart")}
             >
               <span className="text-xl">🛒</span>

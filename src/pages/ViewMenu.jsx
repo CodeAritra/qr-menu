@@ -93,7 +93,7 @@ export default function ViewMenu() {
       </div>
 
       {/* Scrollable Menu Sections */}
-      <div id="menu-scroll" className="flex-1 p-2 space-y-6 overflow-y-auto">
+      <div id="menu-scroll" className="flex-1 p-2 space-y-">
         {menu?.map((section) => (
           <div
             key={section.name}
