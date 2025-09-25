@@ -1,40 +1,39 @@
-/* eslint-disable no-unused-vars */
 import React, { useEffect, useRef, useState } from "react";
 import { useMenu } from "../context/useMenu";
 import { useCart } from "../context/useCart";
 import { useParams } from "react-router-dom";
 
 export default function ViewMenu() {
-  const { menu, loading, updateItem, deleteItem, user, cafe, fetchCafe } =
-    useMenu();
+  const { menu, loading, updateItem, deleteItem, user, fetchCafe } = useMenu();
   const { addToCart } = useCart();
   const [editItem, setEditItem] = useState(null);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState("");
 
   const { cafeName, cafeId } = useParams();
-
-  // console.log("menu = ",menu);
-
   const sectionRefs = useRef({});
 
-  // Attach refs dynamically
+  // Extract categories & attach refs
   useEffect(() => {
-    menu.forEach((section) => {
-      if (!sectionRefs.current[section.name]) {
-        sectionRefs.current[section.name] = React.createRef();
-      }
-      if (menu && menu.length > 0) {
-      // Extract only section names
+    if (menu && menu.length > 0) {
       const extracted = [...new Set(menu.map((section) => section.name))];
       setCategories(extracted);
-      setActiveCategory(extracted[0]); // Default first category active
+      setActiveCategory(extracted[0]); // default
+      // attach refs
+      extracted.forEach((name) => {
+        if (!sectionRefs.current[name]) {
+          sectionRefs.current[name] = React.createRef();
+        }
+      });
     }
-    });
   }, [menu]);
 
-  // Scroll spy with IntersectionObserver
+  // Intersection Observer to update active category on scroll
   useEffect(() => {
+    const scrollContainer = document.getElementById("menu-scroll");
+
+    if (!scrollContainer) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -43,7 +42,11 @@ export default function ViewMenu() {
           }
         });
       },
-      { rootMargin: "-50% 0px -50% 0px", threshold: 0.1 } // middle of screen
+      {
+        root: scrollContainer, // 👈 important: use custom scroll container
+        rootMargin: "-40% 0px -50% 0px",
+        threshold: 0.2,
+      }
     );
 
     Object.values(sectionRefs.current).forEach((ref) => {
@@ -51,35 +54,35 @@ export default function ViewMenu() {
     });
 
     return () => observer.disconnect();
-  }, [menu]);
+  }, []);
 
-  // Scroll to section when clicking category
+  // Handle category click → scroll to section
   const handleCategoryClick = (cat) => {
+    setActiveCategory(cat); // ✅ highlight immediately
     const ref = sectionRefs.current[cat];
     if (ref?.current) {
       ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
-  console.log("categories = ", categories);
-
   useEffect(() => {
-    if (!cafeId) return;
-    fetchCafe(cafeId, cafeName);
+    if (cafeId) {
+      fetchCafe(cafeId, cafeName);
+    }
   }, [fetchCafe, cafeId, cafeName]);
 
   if (loading) return <div className="p-4 text-center">Loading menu...</div>;
 
   return (
-    <div className="flex flex-col overflow-y-auto h-screen bg-base-100">
-      {/* Category Row */}
-         <div className="flex gap-4 overflow-x-auto p-3 shadow-sm no-scrollbar sticky top-0 z-20 bg-base-100">
+    <div className="flex-1 flex-col overflow-y-auto bg-base-100">
+      {/* Sticky Category Row */}
+      <div className="flex gap-4 overflow-x-auto p-3 shadow-sm no-scrollbar sticky top-0 z-20 bg-base-100 border-b">
         {categories.map((cat) => (
           <button
             key={cat}
             className={`flex flex-col items-center px-4 py-2 rounded-md whitespace-nowrap transition-colors ${
               activeCategory === cat
-                ? "bg-orange-100 text-orange-600 font-semibold"
+                ? "bg-purple-100 text-primary font-semibold"
                 : "bg-base-100"
             }`}
             onClick={() => handleCategoryClick(cat)}
@@ -89,16 +92,19 @@ export default function ViewMenu() {
         ))}
       </div>
 
-      {/* Menu Sections */}
-      <div className="flex-1 p-2 space-y-6">
+      {/* Scrollable Menu Sections */}
+      <div id="menu-scroll" className="flex-1 p-2 space-y-6 overflow-y-auto">
         {menu?.map((section) => (
           <div
             key={section.name}
             ref={sectionRefs.current[section.name]}
             data-category={section.name}
-            className="scroll-mt-20" // padding offset for sticky header
+            className="scroll-mt-24"
           >
-            <details open className="collapse collapse-arrow bg-base-100 shadow-sm">
+            <details
+              open
+              className="collapse collapse-arrow bg-base-100 shadow-sm"
+            >
               <summary className="collapse-title font-bold text-lg">
                 {section.name} ({section.items.length})
               </summary>
@@ -139,7 +145,7 @@ export default function ViewMenu() {
         ))}
       </div>
 
-      {/* --- Admin Edit Modal --- */}
+      {/* ✅ Admin Edit Modal */}
       {user && editItem && (
         <dialog open className="modal">
           <div className="modal-box">

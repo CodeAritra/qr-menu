@@ -41,7 +41,7 @@ export default function ClientDashboard() {
   }
   return (
     <>
-      <div className="flex flex-col h-screen overflow-y-auto ">
+      <div className="flex flex-col h-screen">
         <Navbar />
         <Outlet />
 
