@@ -9,7 +9,7 @@ export default function ViewMenu() {
   const [editItem, setEditItem] = useState(null);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState("");
-    const [headerHeight, setHeaderHeight] = useState(0); // 👈 track dynamic height
+  const [headerHeight, setHeaderHeight] = useState(0); // 👈 track dynamic height
 
   const { cafeName, cafeId } = useParams();
   const sectionRefs = useRef({});
@@ -19,8 +19,8 @@ export default function ViewMenu() {
     if (menu && menu.length > 0) {
       const extracted = [...new Set(menu.map((section) => section.name))];
       setCategories(extracted);
-      setActiveCategory(extracted[0]); // default
-      // attach refs
+      setActiveCategory(extracted[0]);
+
       extracted.forEach((name) => {
         if (!sectionRefs.current[name]) {
           sectionRefs.current[name] = React.createRef();
@@ -29,7 +29,7 @@ export default function ViewMenu() {
     }
   }, [menu]);
 
-    // Measure sticky-header height
+  // Measure sticky-header height dynamically
   useEffect(() => {
     const stickyHeader = document.querySelector(".sticky-header");
     if (stickyHeader) {
@@ -37,50 +37,31 @@ export default function ViewMenu() {
         setHeaderHeight(stickyHeader.offsetHeight);
       });
       resizeObserver.observe(stickyHeader);
-
-      // set initial height
       setHeaderHeight(stickyHeader.offsetHeight);
-
       return () => resizeObserver.disconnect();
     }
   }, []);
 
-  // Handle category click → scroll to section
-  const handleCategoryClick = (cat) => {
-    setActiveCategory(cat);
-    const ref = sectionRefs.current[cat];
-
-    if (ref?.current) {
-      const categoryRow = document.querySelector(".category-row");
-
-      const totalHeaderHeight =
-        (document.querySelector(".sticky-header")?.offsetHeight || 0) +
-        (categoryRow?.offsetHeight || 0);
-
-      const itemTop = ref.current.getBoundingClientRect().top + window.scrollY;
-      const scrollOffset = itemTop - totalHeaderHeight;
-
-      window.scrollTo({ top: scrollOffset, behavior: "smooth" });
-    }
-  };
-
-  // Intersection Observer → update active category on scroll
+  // Intersection Observer → update activeCategory on scroll
   useEffect(() => {
+    if (!categories.length) return;
+
+    const categoryRow = document.querySelector(".category-row");
+    const totalOffset =
+      (document.querySelector(".sticky-header")?.offsetHeight || 0) +
+      (categoryRow?.offsetHeight || 0);
+
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveCategory(entry.target.dataset.category);
-          }
-        });
+        let visibleEntry = entries.find((e) => e.isIntersecting);
+        if (visibleEntry) {
+          setActiveCategory(visibleEntry.target.dataset.category);
+        }
       },
       {
-        root: null,
-        rootMargin: `-${
-          (document.querySelector(".sticky-header")?.offsetHeight || 0) +
-          (document.querySelector(".category-row")?.offsetHeight || 0)
-        }px 0px -50% 0px`,
-        threshold: 0.2,
+        root: null, // window scrolling
+        rootMargin: `-${totalOffset}px 0px -60% 0px`,
+        threshold: 0.1,
       }
     );
 
@@ -89,7 +70,25 @@ export default function ViewMenu() {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [categories, headerHeight]);
+
+  // Handle category click → scroll to section
+  const handleCategoryClick = (cat) => {
+    setActiveCategory(cat);
+    const ref = sectionRefs.current[cat];
+    if (ref?.current) {
+      const stickyHeader = document.querySelector(".sticky-header");
+      const categoryRow = document.querySelector(".category-row");
+
+      const totalHeaderHeight =
+        (stickyHeader?.offsetHeight || 0) + (categoryRow?.offsetHeight || 0);
+
+      const itemTop = ref.current.getBoundingClientRect().top + window.scrollY;
+      const scrollOffset = itemTop - totalHeaderHeight;
+
+      window.scrollTo({ top: scrollOffset, behavior: "smooth" });
+    }
+  };
 
   useEffect(() => {
     if (cafeId) {
@@ -102,7 +101,10 @@ export default function ViewMenu() {
   return (
     <div className="flex-1 flex-col bg-base-100">
       {/* Sticky Category Row */}
-      <div className="category-row flex gap-4 overflow-x-auto p-3 shadow-sm no-scrollbar sticky z-10 bg-base-100 border-b" style={{ top: `${headerHeight}px` }}>
+      <div
+        className="category-row flex gap-4 overflow-x-auto p-3 shadow-sm no-scrollbar sticky z-10 bg-base-100 border-b"
+        style={{ top: `${headerHeight}px` }}
+      >
         {categories.map((cat) => (
           <button
             key={cat}
