@@ -9,6 +9,7 @@ export default function ViewMenu() {
   const [editItem, setEditItem] = useState(null);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState("");
+    const [headerHeight, setHeaderHeight] = useState(0); // 👈 track dynamic height
 
   const { cafeName, cafeId } = useParams();
   const sectionRefs = useRef({});
@@ -28,12 +29,43 @@ export default function ViewMenu() {
     }
   }, [menu]);
 
-  // Intersection Observer to update active category on scroll
+    // Measure sticky-header height
   useEffect(() => {
-    const scrollContainer = document.getElementById("menu-scroll");
+    const stickyHeader = document.querySelector(".sticky-header");
+    if (stickyHeader) {
+      const resizeObserver = new ResizeObserver(() => {
+        setHeaderHeight(stickyHeader.offsetHeight);
+      });
+      resizeObserver.observe(stickyHeader);
 
-    if (!scrollContainer) return;
+      // set initial height
+      setHeaderHeight(stickyHeader.offsetHeight);
 
+      return () => resizeObserver.disconnect();
+    }
+  }, []);
+
+  // Handle category click → scroll to section
+  const handleCategoryClick = (cat) => {
+    setActiveCategory(cat);
+    const ref = sectionRefs.current[cat];
+
+    if (ref?.current) {
+      const categoryRow = document.querySelector(".category-row");
+
+      const totalHeaderHeight =
+        (document.querySelector(".sticky-header")?.offsetHeight || 0) +
+        (categoryRow?.offsetHeight || 0);
+
+      const itemTop = ref.current.getBoundingClientRect().top + window.scrollY;
+      const scrollOffset = itemTop - totalHeaderHeight;
+
+      window.scrollTo({ top: scrollOffset, behavior: "smooth" });
+    }
+  };
+
+  // Intersection Observer → update active category on scroll
+  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -43,8 +75,11 @@ export default function ViewMenu() {
         });
       },
       {
-        root: scrollContainer, // 👈 important: use custom scroll container
-        rootMargin: "-40% 0px -50% 0px",
+        root: null,
+        rootMargin: `-${
+          (document.querySelector(".sticky-header")?.offsetHeight || 0) +
+          (document.querySelector(".category-row")?.offsetHeight || 0)
+        }px 0px -50% 0px`,
         threshold: 0.2,
       }
     );
@@ -56,15 +91,6 @@ export default function ViewMenu() {
     return () => observer.disconnect();
   }, []);
 
-  // Handle category click → scroll to section
-  const handleCategoryClick = (cat) => {
-    setActiveCategory(cat); // ✅ highlight immediately
-    const ref = sectionRefs.current[cat];
-    if (ref?.current) {
-      ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
   useEffect(() => {
     if (cafeId) {
       fetchCafe(cafeId, cafeName);
@@ -74,9 +100,9 @@ export default function ViewMenu() {
   if (loading) return <div className="p-4 text-center">Loading menu...</div>;
 
   return (
-    <div className="flex-1 flex-col overflow-y-auto bg-base-100">
+    <div className="flex-1 flex-col bg-base-100">
       {/* Sticky Category Row */}
-      <div className="flex gap-4 overflow-x-auto p-3 shadow-sm no-scrollbar sticky top-0 z-20 bg-base-100 border-b">
+      <div className="category-row flex gap-4 overflow-x-auto p-3 shadow-sm no-scrollbar sticky z-10 bg-base-100 border-b" style={{ top: `${headerHeight}px` }}>
         {categories.map((cat) => (
           <button
             key={cat}
@@ -93,13 +119,15 @@ export default function ViewMenu() {
       </div>
 
       {/* Scrollable Menu Sections */}
-      <div id="menu-scroll" className="flex-1 p-2 space-y-">
+      <div id="menu-scroll" className="flex-1 p-2 space-y-6 ">
         {menu?.map((section) => (
           <div
             key={section.name}
             ref={sectionRefs.current[section.name]}
             data-category={section.name}
-            className="scroll-mt-24"
+            style={{
+              scrollMarginTop: "calc(80px + env(safe-area-inset-top))",
+            }}
           >
             <details
               open

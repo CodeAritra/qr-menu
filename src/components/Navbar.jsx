@@ -165,39 +165,47 @@ export default function Navbar({ children }) {
 
       {/* Client Navbar */}
       {!user && (
-        <div className="sticky top-0 z-20 bg-base-100 shadow-md">
-          {/* Cafe Header (scrolls away if needed) */}
-          <header className="flex items-center gap-2 p-2">
-            <img
-              src="/logo192.png"
-              alt="Cafe Logo"
-              className="w-10 h-10 rounded-full shadow"
-            />
-            <h1 className="font-bold text-lg text-primary">{cafe?.name || "Cafe"}</h1>
-          </header>
-
-          {/* Search + Filter (sticks below header) */}
-          <div className="flex gap-2 p-2 bg-base-100 sticky top-0 z-30 input input-primary flex-1 rounded-md m-5">
-            <svg
-              className="h-[1em] opacity-50"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-            >
-              <g
-                strokeLinejoin="round"
-                strokeLinecap="round"
-                strokeWidth="2.5"
-                fill="none"
-                stroke="currentColor"
-              >
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.3-4.3"></path>
-              </g>
-            </svg>
-
-            <input type="search" placeholder="Search item..." className="" />
+        <>
+          <div className="sticky-header bg-base-100 shadow-md">
+            {/* Cafe Header (scrolls away if needed) */}
+            <header className="flex items-center gap-2 p-2">
+              <img
+                src="/logo192.png"
+                alt="Cafe Logo"
+                className="w-10 h-10 rounded-full shadow"
+              />
+              <h1 className="font-bold text-lg text-primary">
+                {cafe?.name || "Cafe"}
+              </h1>
+            </header>
           </div>
-        </div>
+          {/* Search + Filter (sticks below header) */}
+          <div className="sticky top-0 z-30 bg-base-100 p-2 shadow">
+            <div className="flex gap-2 items-center input input-primary rounded-md w-full">
+              <svg
+                className="h-[1em] opacity-50"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+              >
+                <g
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  strokeWidth="2.5"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.3-4.3"></path>
+                </g>
+              </svg>
+              <input
+                type="search"
+                placeholder="Search item..."
+                className="flex-1 bg-transparent outline-none"
+              />
+            </div>
+          </div>
+        </>
       )}
     </>
   );
